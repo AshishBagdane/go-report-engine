@@ -34,6 +34,8 @@ Built using **Strategy**, **Factory**, **Builder**, **Template Method**, and **C
 - ✅ **Input Validation** - Comprehensive validation across all components
 - 🏗️ **Builder Pattern** - Fluent API for engine construction
 - ⚙️ **Config-Driven Setup** - YAML/JSON configuration support
+- 📝 **Structured Logging** - slog integration with metrics tracking
+- 🔍 **Observable Pipeline** - Every stage logged with performance metrics
 - 🌱 **Built in Public** - Follow the real-time development journey
 
 ---
@@ -256,6 +258,81 @@ if errors.IsRetryable(err) {
 
 ---
 
+## 📝 Structured Logging
+
+### **Automatic Logging**
+
+All components include built-in logging with zero configuration:
+
+```go
+// Logging works automatically
+provider := provider.NewMockProvider()
+data, _ := provider.Fetch() // Logs: fetch start, duration, record count
+
+formatter := formatter.NewJSONFormatter()
+formatted, _ := formatter.Format(data) // Logs: format metrics, output size
+
+output := output.NewConsoleOutput()
+output.Send(formatted) // Logs: send metrics, data size
+```
+
+### **Custom Logger**
+
+Inject custom loggers for control over log levels and formats:
+
+```go
+import "github.com/AshishBagdane/go-report-engine/internal/logging"
+
+// Create custom logger
+logger := logging.NewLogger(logging.Config{
+    Level:     logging.LevelDebug,
+    Format:    logging.FormatJSON,
+    Component: "my-app",
+})
+
+// Inject into components
+provider := provider.NewMockProvider().WithLogger(logger)
+formatter := formatter.NewJSONFormatter().WithLogger(logger)
+output := output.NewConsoleOutput().WithLogger(logger)
+```
+
+### **Context-Aware Logging**
+
+Track requests through the pipeline with correlation IDs:
+
+```go
+import "github.com/AshishBagdane/go-report-engine/internal/logging"
+
+// Add request tracking
+ctx := context.Background()
+ctx = logging.WithRequestID(ctx, "req-abc-123")
+ctx = logging.WithCorrelationID(ctx, "corr-xyz-789")
+
+// Logs will include request_id and correlation_id
+logger.InfoContext(ctx, "processing started", "user", "alice")
+```
+
+### **Metrics Tracked**
+
+Each component logs comprehensive metrics:
+
+| Component     | Metrics Logged                                                               |
+| ------------- | ---------------------------------------------------------------------------- |
+| **Provider**  | `provider_type`, `data_source`, `duration_ms`, `duration_us`, `record_count` |
+| **Processor** | `input_records`, `output_records`, `filtered_records`, `duration_ms`         |
+| **Formatter** | `formatter_type`, `record_count`, `output_size_bytes`, `duration_ms`         |
+| **Output**    | `output_type`, `destination`, `data_size_bytes`, `duration_ms`               |
+
+### **Sample Log Output**
+
+```json
+{"time":"2024-11-24T10:30:45Z","level":"INFO","component":"provider.mock","msg":"fetch starting","provider_type":"mock","data_source":"hardcoded"}
+{"time":"2024-11-24T10:30:45Z","level":"INFO","component":"provider.mock","msg":"fetch completed","provider_type":"mock","duration_ms":0,"duration_us":42,"record_count":2}
+{"time":"2024-11-24T10:30:45Z","level":"INFO","component":"formatter.json","msg":"formatting completed","formatter_type":"json","record_count":2,"output_size_bytes":156,"duration_ms":1}
+```
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -294,10 +371,16 @@ go-report-engine/
 │   │   ├── processor_registry_test.go # ✅ Processor registry tests
 │   │   ├── provider_registry.go       # ✅ Provider registry
 │   │   └── provider_registry_test.go  # ✅ Provider registry tests
+│   ├── logging/                       # ✅ Structured logging
+│   │   ├── logger.go                  # ✅ Logger implementation
+│   │   ├── logger_test.go             # ✅ Logger tests
+│   │   ├── context.go                 # ✅ Context helpers
+│   │   └── context_test.go            # ✅ Context tests
 │   ├── provider/
 │   │   ├── provider.go                # ✅ Provider interface
-│   │   ├── mock.go                    # ✅ Mock implementation
-│   │   └── mock_test.go               # ✅ Mock provider tests
+│   │   ├── mock.go                    # ✅ Mock implementation (with logging)
+│   │   ├── mock_test.go               # ✅ Mock provider tests
+│   │   └── mock_logging_test.go       # ✅ Logging tests (11 tests + 3 benchmarks)
 │   ├── processor/
 │   │   ├── processor.go               # ✅ Processor interface
 │   │   ├── base.go                    # ✅ Base processor
@@ -347,8 +430,8 @@ go test ./... -bench=. -benchmem
 
 ### **Current Test Statistics**
 
-- **173 test functions** across all packages
-- **22 benchmarks** for performance validation
+- **271 test functions** across all packages
+- **52 benchmarks** for performance validation
 - **95%+ code coverage** on core components
 - **Race detector clean** - safe for concurrent use
 - **Zero flaky tests** - reliable and deterministic
@@ -360,7 +443,8 @@ go test ./... -bench=. -benchmem
 | engine    | 25             | 4          | 95%      |
 | errors    | 38             | 6          | 95%      |
 | registry  | 48             | 12         | 100%     |
-| provider  | 12             | 3          | 100%     |
+| logging   | 24             | 7          | 95%      |
+| provider  | 23             | 6          | 100%     |
 | processor | 28             | 4          | 95%      |
 | formatter | 14             | 4          | 100%     |
 | output    | 13             | 3          | 100%     |
@@ -414,9 +498,11 @@ go test ./... -bench=. -benchmem
 - ✅ Comprehensive error handling system
 - ✅ Builder and factory patterns
 - ✅ Input validation across all components
+- ✅ Structured logging with `slog`
+- ✅ Observable pipeline with metrics tracking
 - ✅ 95%+ test coverage on core components
 - ✅ Complete documentation with examples
-- ✅ 173 unit tests + 22 benchmarks
+- ✅ 271 unit tests + 52 benchmarks
 
 ### **Phase 2 - Additional Components** (In Progress)
 
@@ -428,10 +514,10 @@ go test ./... -bench=. -benchmem
 - [ ] File Output implementation
 - [ ] Additional processor types (Aggregate, Deduplicate)
 
-### **Phase 3 - Production Features**
+### **Phase 3 - Production Features** (In Progress)
 
-- [ ] Structured logging with `slog`
-- [ ] Context support for cancellation
+- ✅ Structured logging with `slog`
+- ✅ Context support for request/correlation IDs
 - [ ] YAML/JSON config file loading
 - [ ] Resource cleanup and lifecycle management
 - [ ] Integration tests
@@ -658,12 +744,13 @@ If you find this useful:
 
 ## 🏆 Project Highlights
 
-- **173 Test Functions** - Comprehensive test coverage
-- **22 Benchmarks** - Performance validation
+- **271 Test Functions** - Comprehensive test coverage
+- **52 Benchmarks** - Performance validation
 - **95%+ Coverage** - High-quality codebase
 - **Zero Race Conditions** - Thread-safe implementation
 - **SOLID Design** - Professional architecture
 - **Production-Ready** - Enterprise-grade error handling
+- **Observable Pipeline** - Structured logging with metrics
 - **Well-Documented** - Complete godoc coverage
 - **Built in Public** - Transparent development process
 
