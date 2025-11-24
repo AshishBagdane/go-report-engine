@@ -148,7 +148,7 @@ func DefaultConfig() Config {
 	return Config{
 		Level:         LevelInfo,
 		Format:        FormatJSON,
-		Output:        os.Stderr,
+		Output:        nil, // Will default to os.Stderr in NewLogger
 		Component:     "",
 		AddSource:     false,
 		SensitiveKeys: defaultSensitiveKeys(),
@@ -198,6 +198,11 @@ func NewLogger(config Config) *Logger {
 	// Set defaults
 	if config.Output == nil {
 		config.Output = os.Stderr
+	}
+
+	// Use default sensitive keys if none provided
+	if config.SensitiveKeys == nil {
+		config.SensitiveKeys = defaultSensitiveKeys()
 	}
 
 	// Create handler options
@@ -366,19 +371,14 @@ func (l *Logger) filterSensitive(args ...interface{}) []interface{} {
 
 	// Process pairs of key-value arguments
 	filtered := make([]interface{}, len(args))
-	for i := 0; i < len(args); i++ {
-		filtered[i] = args[i]
+	copy(filtered, args)
 
-		// Check if this is a key position (even index) and next exists
-		if i%2 == 0 && i+1 < len(args) {
-			if key, ok := args[i].(string); ok {
-				// Check if key is sensitive (case-insensitive)
-				if _, isSensitive := l.sensitiveKeys[strings.ToLower(key)]; isSensitive {
-					// Redact the value at position i+1
-					filtered[i+1] = "[REDACTED]"
-					i++ // Skip the value since we just handled it
-					continue
-				}
+	for i := 0; i < len(args)-1; i += 2 {
+		if key, ok := args[i].(string); ok {
+			// Check if key is sensitive (case-insensitive)
+			if _, isSensitive := l.sensitiveKeys[strings.ToLower(key)]; isSensitive {
+				// Redact the value at position i+1
+				filtered[i+1] = "[REDACTED]"
 			}
 		}
 	}
