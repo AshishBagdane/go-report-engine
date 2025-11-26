@@ -1,5 +1,3 @@
-// Package provider contains data source implementations that fetch raw data
-// for the report engine pipeline.
 package provider
 
 import (
@@ -9,80 +7,61 @@ import (
 	"github.com/AshishBagdane/report-engine/internal/logging"
 )
 
-// MockProvider is a test implementation that returns hardcoded sample data.
-// It's primarily used for testing, examples, and development. This provider
-// includes comprehensive structured logging for observability.
+// MockProvider is a simple in-memory provider for testing and examples.
+// It returns pre-configured data without accessing external sources.
 //
-// The MockProvider returns two sample records with id, name, and score fields.
-// It demonstrates the Provider interface contract and logging patterns.
+// MockProvider respects context cancellation even though its operation
+// is fast. This demonstrates proper context handling patterns.
 //
-// Thread-safe: Yes. Multiple goroutines can safely call Fetch() concurrently.
-//
-// Example:
-//
-//	provider := provider.NewMockProvider()
-//
-//	// Optional: Set custom logger
-//	logger := logging.NewLogger(logging.Config{
-//	    Level: logging.LevelDebug,
-//	    Component: "provider.mock",
-//	})
-//	provider.WithLogger(logger)
-//
-//	data, err := provider.Fetch()
-//	if err != nil {
-//	    log.Fatal(err)
-//	}
+// Thread-safe: Yes. MockProvider is immutable after creation and can
+// be safely called from multiple goroutines.
 type MockProvider struct {
-	// logger provides structured logging for fetch operations.
-	// If nil, a default logger is created on first use.
+	// Data is the pre-configured data to return
+	Data []map[string]interface{}
+
+	// logger is the optional logger instance for this provider
 	logger *logging.Logger
 }
 
-// NewMockProvider creates a new MockProvider with default configuration.
-// The returned provider has a default logger that can be overridden using WithLogger().
+// NewMockProvider creates a new MockProvider with the given data.
+// This is the recommended way to create a MockProvider.
 //
-// Returns a ProviderStrategy implementation ready for use in the report engine.
-func NewMockProvider() ProviderStrategy {
+// Example:
+//
+//	provider := provider.NewMockProvider([]map[string]interface{}{
+//	    {"id": 1, "name": "Alice", "score": 95},
+//	    {"id": 2, "name": "Bob", "score": 87},
+//	})
+//
+// Parameters:
+//   - data: The data to return from Fetch calls
+//
+// Returns:
+//   - *MockProvider: A new provider instance
+func NewMockProvider(data []map[string]interface{}) *MockProvider {
 	return &MockProvider{
-		logger: nil, // Will be lazily initialized
+		Data:   data,
+		logger: nil, // Will be lazily initialized if needed
 	}
 }
 
-// WithLogger sets a custom logger for the provider.
-// This method enables dependency injection of loggers and allows users to
-// configure logging behavior (level, format, output destination).
-//
-// If not called, a default logger is created automatically on first fetch.
-//
-// Parameters:
-//   - logger: Configured logger instance (must not be nil)
-//
-// Returns the provider for method chaining.
+// WithLogger sets the logger for this provider and returns the provider for chaining.
+// If no logger is set, a default logger will be created on first use.
 //
 // Example:
 //
 //	logger := logging.NewLogger(logging.Config{
-//	    Level:     logging.LevelDebug,
-//	    Format:    logging.FormatJSON,
+//	    Level:     logging.LevelInfo,
 //	    Component: "provider.mock",
 //	})
-//
-//	provider := provider.NewMockProvider().WithLogger(logger)
+//	provider := provider.NewMockProvider(data).WithLogger(logger)
 func (m *MockProvider) WithLogger(logger *logging.Logger) *MockProvider {
 	m.logger = logger
 	return m
 }
 
-// getLogger returns the provider's logger, creating a default one if needed.
-// This implements lazy initialization of the logger to avoid requiring explicit
-// configuration in simple use cases.
-//
-// The default logger uses:
-//   - Level: Info
-//   - Format: JSON
-//   - Component: "provider.mock"
-//   - Output: stderr
+// getLogger returns the logger instance, creating a default one if necessary.
+// This ensures lazy initialization of the logger.
 func (m *MockProvider) getLogger() *logging.Logger {
 	if m.logger == nil {
 		m.logger = logging.NewLogger(logging.Config{
@@ -94,76 +73,73 @@ func (m *MockProvider) getLogger() *logging.Logger {
 	return m.logger
 }
 
-// Fetch retrieves hardcoded sample data for testing and demonstration purposes.
-// This implementation returns two records with consistent data on every call.
+// Fetch returns the pre-configured data from the provider.
+// It checks for context cancellation before returning to demonstrate
+// proper context handling, even for fast operations.
 //
-// The method includes comprehensive logging:
-//   - Fetch operation start (Info level)
-//   - Fetch completion with metrics (Info level)
-//   - Warning if no records returned (Warn level - though this never happens in mock)
+// Context handling:
+//   - Returns ctx.Err() if context is already canceled/expired
+//   - Returns immediately if context is valid
+//
+// Logging:
+//   - Logs fetch start and completion at Info level
+//   - Logs data structure details at Debug level
+//   - Includes performance metrics (duration, record count)
+//
+// Parameters:
+//   - ctx: Context for cancellation and timeout control
 //
 // Returns:
-//   - []map[string]interface{}: Slice of data records, each as a key-value map
-//   - error: Always nil for MockProvider (included for interface compliance)
-//
-// Thread-safe: Yes. Multiple goroutines can safely call this method concurrently.
-//
-// Performance: O(1) - Returns a fixed-size hardcoded dataset.
-//
-// Example return value:
-//
-//	[]map[string]interface{}{
-//	    {"id": 1, "name": "Alice", "score": 95},
-//	    {"id": 2, "name": "Bob", "score": 88},
-//	}
-func (m *MockProvider) Fetch() ([]map[string]interface{}, error) {
+//   - []map[string]interface{}: The mock data
+//   - error: ctx.Err() if context is canceled/expired, nil otherwise
+func (m *MockProvider) Fetch(ctx context.Context) ([]map[string]interface{}, error) {
 	logger := m.getLogger()
-	ctx := context.Background()
 	startTime := time.Now()
 
+	// Log fetch starting
 	logger.InfoContext(ctx, "fetch starting",
 		"provider_type", "mock",
-		"data_source", "hardcoded",
+		"data_size", len(m.Data),
 	)
 
-	// Hardcoded sample data for testing and examples
-	data := []map[string]interface{}{
-		{
-			"id":    1,
-			"name":  "Alice",
-			"score": 95,
-		},
-		{
-			"id":    2,
-			"name":  "Bob",
-			"score": 88,
-		},
+	// Check if context is already canceled or deadline exceeded
+	// This is important even for fast operations to respect cancellation
+	select {
+	case <-ctx.Done():
+		// Context was canceled or deadline exceeded
+		logger.WarnContext(ctx, "fetch canceled",
+			"provider_type", "mock",
+			"reason", ctx.Err().Error(),
+		)
+		return nil, ctx.Err()
+	default:
+		// Context is still valid, proceed with fetch
 	}
 
-	duration := time.Since(startTime)
-	recordCount := len(data)
-
-	logger.InfoContext(ctx, "fetch completed",
-		"provider_type", "mock",
-		"duration_ms", duration.Milliseconds(),
-		"duration_us", duration.Microseconds(),
-		"record_count", recordCount,
-		"data_source", "hardcoded",
-	)
-
-	// Log warning if no records (though this never happens for mock provider)
-	if recordCount == 0 {
-		logger.WarnContext(ctx, "provider returned zero records",
+	// Log data structure at debug level
+	if logger.Enabled(logging.LevelDebug) && len(m.Data) > 0 {
+		// Extract field names from first record
+		fields := make([]string, 0, len(m.Data[0]))
+		for key := range m.Data[0] {
+			fields = append(fields, key)
+		}
+		logger.DebugContext(ctx, "fetch data structure",
 			"provider_type", "mock",
+			"fields", fields,
+			"sample_record", m.Data[0],
 		)
 	}
 
-	// Log debug information about the data structure
-	logger.Debug("fetch data structure",
+	// Calculate duration
+	duration := time.Since(startTime)
+
+	// Log fetch completion
+	logger.InfoContext(ctx, "fetch completed",
 		"provider_type", "mock",
-		"fields", []string{"id", "name", "score"},
-		"sample_record", data[0],
+		"record_count", len(m.Data),
+		"duration_ms", float64(duration.Microseconds())/1000.0,
 	)
 
-	return data, nil
+	// Return the pre-configured data
+	return m.Data, nil
 }

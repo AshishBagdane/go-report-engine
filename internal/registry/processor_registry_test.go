@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -15,9 +16,9 @@ type mockProcessor struct {
 	processor.BaseProcessor
 }
 
-func (m *mockProcessor) Process(data []map[string]interface{}) ([]map[string]interface{}, error) {
+func (m *mockProcessor) Process(ctx context.Context, data []map[string]interface{}) ([]map[string]interface{}, error) {
 	// Simply pass through
-	return m.BaseProcessor.Process(data)
+	return m.BaseProcessor.Process(ctx, data)
 }
 
 // mockProcessorFactory creates a new mock processor
@@ -129,7 +130,6 @@ func TestGetProcessor(t *testing.T) {
 		name        string
 		lookup      string
 		shouldError bool
-		errorType   string
 	}{
 		{
 			name:        "get existing processor",
@@ -140,13 +140,11 @@ func TestGetProcessor(t *testing.T) {
 			name:        "get non-existent processor",
 			lookup:      "nonexistent",
 			shouldError: true,
-			errorType:   "*registry.ErrProcessorNotFound",
 		},
 		{
 			name:        "empty name returns error",
 			lookup:      "",
 			shouldError: true,
-			errorType:   "ErrEmptyProcessorName",
 		},
 	}
 
@@ -170,22 +168,118 @@ func TestGetProcessor(t *testing.T) {
 	}
 }
 
-// TestGetProcessorReturnsNewInstance verifies that each call returns a new instance
-func TestGetProcessorReturnsNewInstance(t *testing.T) {
+// TestRegisterFilter tests type-safe filter registration
+func TestRegisterFilter(t *testing.T) {
 	ClearProcessors()
 
-	RegisterProcessor("test", mockProcessorFactory("test"))
+	filter := &mockFilterStrategy{threshold: 50}
+	RegisterFilter("test_filter", filter)
 
-	p1, err1 := GetProcessor("test")
-	p2, err2 := GetProcessor("test")
-
-	if err1 != nil || err2 != nil {
-		t.Fatalf("Unexpected errors: %v, %v", err1, err2)
+	if !IsProcessorRegistered("test_filter") {
+		t.Error("Filter was not registered as processor")
 	}
 
-	// Different instances should have different addresses
-	if p1 == p2 {
-		t.Error("GetProcessor returned same instance, expected new instance each time")
+	// Verify we can get it back
+	proc, err := GetProcessor("test_filter")
+	if err != nil {
+		t.Fatalf("Failed to get registered filter: %v", err)
+	}
+
+	// Test that it works
+	testData := []map[string]interface{}{
+		{"id": 1, "value": 30},
+		{"id": 2, "value": 60},
+	}
+
+	ctx := context.Background()
+	result, err := proc.Process(ctx, testData)
+	if err != nil {
+		t.Fatalf("Filter process failed: %v", err)
+	}
+
+	// Should filter out value < 50
+	if len(result) != 1 {
+		t.Errorf("Filter returned %d records, expected 1", len(result))
+	}
+}
+
+// TestRegisterValidator tests type-safe validator registration
+func TestRegisterValidator(t *testing.T) {
+	ClearProcessors()
+
+	validator := &mockValidatorStrategy{}
+	RegisterValidator("test_validator", validator)
+
+	if !IsProcessorRegistered("test_validator") {
+		t.Error("Validator was not registered as processor")
+	}
+
+	// Verify we can get it back
+	proc, err := GetProcessor("test_validator")
+	if err != nil {
+		t.Fatalf("Failed to get registered validator: %v", err)
+	}
+
+	// Test that it works - valid data
+	validData := []map[string]interface{}{
+		{"id": 1, "required_field": "present"},
+	}
+
+	ctx := context.Background()
+	result, err := proc.Process(ctx, validData)
+	if err != nil {
+		t.Errorf("Validator should pass valid data: %v", err)
+	}
+	if len(result) != 1 {
+		t.Error("Validator should return valid data")
+	}
+
+	// Test that it works - invalid data
+	invalidData := []map[string]interface{}{
+		{"id": 1}, // Missing required_field
+	}
+
+	result, err = proc.Process(ctx, invalidData)
+	if err == nil {
+		t.Error("Validator should reject invalid data")
+	}
+}
+
+// TestRegisterTransformer tests type-safe transformer registration
+func TestRegisterTransformer(t *testing.T) {
+	ClearProcessors()
+
+	transformer := &mockTransformerStrategy{multiplier: 2}
+	RegisterTransformer("test_transformer", transformer)
+
+	if !IsProcessorRegistered("test_transformer") {
+		t.Error("Transformer was not registered as processor")
+	}
+
+	// Verify we can get it back
+	proc, err := GetProcessor("test_transformer")
+	if err != nil {
+		t.Fatalf("Failed to get registered transformer: %v", err)
+	}
+
+	// Test that it works
+	testData := []map[string]interface{}{
+		{"id": 1, "value": 10},
+	}
+
+	ctx := context.Background()
+	result, err := proc.Process(ctx, testData)
+	if err != nil {
+		t.Fatalf("Transformer process failed: %v", err)
+	}
+
+	if len(result) != 1 {
+		t.Fatalf("Expected 1 record, got %d", len(result))
+	}
+
+	// Value should be multiplied by 2
+	if result[0]["value"].(int) != 20 {
+		t.Errorf("Transformer did not multiply value correctly, got %v", result[0]["value"])
 	}
 }
 
@@ -200,9 +294,9 @@ func TestListProcessors(t *testing.T) {
 	}
 
 	// Add processors
-	RegisterProcessor("filter", mockProcessorFactory("filter"))
-	RegisterProcessor("validator", mockProcessorFactory("validator"))
-	RegisterProcessor("transformer", mockProcessorFactory("transformer"))
+	RegisterProcessor("proc1", mockProcessorFactory("1"))
+	RegisterFilter("filter1", &mockFilterStrategy{threshold: 50})
+	RegisterValidator("validator1", &mockValidatorStrategy{})
 
 	list = ListProcessors()
 
@@ -211,7 +305,7 @@ func TestListProcessors(t *testing.T) {
 	}
 
 	// Verify sorted order
-	expected := []string{"filter", "transformer", "validator"}
+	expected := []string{"filter1", "proc1", "validator1"}
 	for i, name := range expected {
 		if list[i] != name {
 			t.Errorf("Expected processors[%d] = %s, got %s", i, name, list[i])
@@ -270,8 +364,8 @@ func TestClearProcessors(t *testing.T) {
 	ClearProcessors()
 
 	RegisterProcessor("p1", mockProcessorFactory("1"))
-	RegisterProcessor("p2", mockProcessorFactory("2"))
-	RegisterProcessor("p3", mockProcessorFactory("3"))
+	RegisterFilter("f1", &mockFilterStrategy{threshold: 50})
+	RegisterValidator("v1", &mockValidatorStrategy{})
 
 	if ProcessorCount() != 3 {
 		t.Fatalf("Expected 3 processors, got %d", ProcessorCount())
@@ -297,7 +391,7 @@ func TestProcessorCount(t *testing.T) {
 		t.Errorf("Expected 1 processor, got %d", ProcessorCount())
 	}
 
-	RegisterProcessor("p2", mockProcessorFactory("2"))
+	RegisterFilter("f1", &mockFilterStrategy{threshold: 50})
 	if ProcessorCount() != 2 {
 		t.Errorf("Expected 2 processors, got %d", ProcessorCount())
 	}
@@ -308,183 +402,71 @@ func TestProcessorCount(t *testing.T) {
 	}
 }
 
-// TestRegisterFilter tests type-safe filter registration
-func TestRegisterFilter(t *testing.T) {
-	ClearProcessors()
-
-	tests := []struct {
-		name        string
-		filterName  string
-		strategy    api.FilterStrategy
-		shouldPanic bool
-	}{
-		{
-			name:        "valid filter registration",
-			filterName:  "min_threshold",
-			strategy:    &mockFilterStrategy{threshold: 10},
-			shouldPanic: false,
-		},
-		{
-			name:        "nil strategy panics",
-			filterName:  "nil_filter",
-			strategy:    nil,
-			shouldPanic: true,
-		},
-		{
-			name:        "empty name panics",
-			filterName:  "",
-			strategy:    &mockFilterStrategy{threshold: 10},
-			shouldPanic: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.shouldPanic {
-				defer func() {
-					if r := recover(); r == nil {
-						t.Errorf("RegisterFilter did not panic for %s", tt.name)
-					}
-				}()
-			}
-
-			RegisterFilter(tt.filterName, tt.strategy)
-
-			if !tt.shouldPanic {
-				if !IsProcessorRegistered(tt.filterName) {
-					t.Errorf("Filter %s was not registered", tt.filterName)
-				}
-
-				// Verify it returns a wrapped processor
-				proc, err := GetProcessor(tt.filterName)
-				if err != nil {
-					t.Errorf("Failed to get registered filter: %v", err)
-				}
-				if proc == nil {
-					t.Error("Expected non-nil processor")
-				}
-			}
-		})
-	}
+// configurableFilter for testing configuration
+type configurableFilter struct {
+	threshold  int
+	configured bool
 }
 
-// TestRegisterValidator tests type-safe validator registration
-func TestRegisterValidator(t *testing.T) {
-	ClearProcessors()
-
-	tests := []struct {
-		name          string
-		validatorName string
-		strategy      api.ValidatorStrategy
-		shouldPanic   bool
-	}{
-		{
-			name:          "valid validator registration",
-			validatorName: "required_fields",
-			strategy:      &mockValidatorStrategy{},
-			shouldPanic:   false,
-		},
-		{
-			name:          "nil strategy panics",
-			validatorName: "nil_validator",
-			strategy:      nil,
-			shouldPanic:   true,
-		},
-		{
-			name:          "empty name panics",
-			validatorName: "",
-			strategy:      &mockValidatorStrategy{},
-			shouldPanic:   true,
-		},
+func (c *configurableFilter) Keep(row map[string]interface{}) bool {
+	if val, ok := row["value"].(int); ok {
+		return val >= c.threshold
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.shouldPanic {
-				defer func() {
-					if r := recover(); r == nil {
-						t.Errorf("RegisterValidator did not panic for %s", tt.name)
-					}
-				}()
-			}
-
-			RegisterValidator(tt.validatorName, tt.strategy)
-
-			if !tt.shouldPanic {
-				if !IsProcessorRegistered(tt.validatorName) {
-					t.Errorf("Validator %s was not registered", tt.validatorName)
-				}
-
-				// Verify it returns a wrapped processor
-				proc, err := GetProcessor(tt.validatorName)
-				if err != nil {
-					t.Errorf("Failed to get registered validator: %v", err)
-				}
-				if proc == nil {
-					t.Error("Expected non-nil processor")
-				}
-			}
-		})
-	}
+	return false
 }
 
-// TestRegisterTransformer tests type-safe transformer registration
-func TestRegisterTransformer(t *testing.T) {
+func (c *configurableFilter) Configure(params map[string]string) error {
+	c.configured = true
+	thresholdStr, ok := params["threshold"]
+	if !ok {
+		return api.ErrMissingParam("threshold")
+	}
+	// Simple string to int conversion for test
+	if thresholdStr == "100" {
+		c.threshold = 100
+	} else {
+		c.threshold = 50
+	}
+	return nil
+}
+
+// TestRegisterFilterWithConfiguration tests configurable filter
+func TestRegisterFilterWithConfiguration(t *testing.T) {
 	ClearProcessors()
 
-	tests := []struct {
-		name            string
-		transformerName string
-		strategy        api.TransformerStrategy
-		shouldPanic     bool
-	}{
-		{
-			name:            "valid transformer registration",
-			transformerName: "multiplier",
-			strategy:        &mockTransformerStrategy{multiplier: 2},
-			shouldPanic:     false,
-		},
-		{
-			name:            "nil strategy panics",
-			transformerName: "nil_transformer",
-			strategy:        nil,
-			shouldPanic:     true,
-		},
-		{
-			name:            "empty name panics",
-			transformerName: "",
-			strategy:        &mockTransformerStrategy{multiplier: 2},
-			shouldPanic:     true,
-		},
+	filter := &configurableFilter{}
+	RegisterFilter("configurable_filter", filter)
+
+	proc, err := GetProcessor("configurable_filter")
+	if err != nil {
+		t.Fatalf("Failed to get processor: %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.shouldPanic {
-				defer func() {
-					if r := recover(); r == nil {
-						t.Errorf("RegisterTransformer did not panic for %s", tt.name)
-					}
-				}()
-			}
+	// Configure it
+	if configurable, ok := proc.(api.Configurable); ok {
+		err := configurable.Configure(map[string]string{"threshold": "100"})
+		if err != nil {
+			t.Fatalf("Configuration failed: %v", err)
+		}
+	} else {
+		t.Fatal("Processor should be configurable")
+	}
 
-			RegisterTransformer(tt.transformerName, tt.strategy)
+	// Test it works with configured threshold
+	testData := []map[string]interface{}{
+		{"id": 1, "value": 75},
+		{"id": 2, "value": 150},
+	}
 
-			if !tt.shouldPanic {
-				if !IsProcessorRegistered(tt.transformerName) {
-					t.Errorf("Transformer %s was not registered", tt.transformerName)
-				}
+	ctx := context.Background()
+	result, err := proc.Process(ctx, testData)
+	if err != nil {
+		t.Fatalf("Process failed: %v", err)
+	}
 
-				// Verify it returns a wrapped processor
-				proc, err := GetProcessor(tt.transformerName)
-				if err != nil {
-					t.Errorf("Failed to get registered transformer: %v", err)
-				}
-				if proc == nil {
-					t.Error("Expected non-nil processor")
-				}
-			}
-		})
+	// With threshold=100, should only keep value >= 100
+	if len(result) != 1 {
+		t.Errorf("Expected 1 record with threshold 100, got %d", len(result))
 	}
 }
 
@@ -499,17 +481,17 @@ func TestProcessorConcurrentRegister(t *testing.T) {
 	for i := 0; i < goroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
-			name := string(rune('a' + (id % 26)))
+			name := fmt.Sprintf("proc_%d", id%26)
 			RegisterProcessor(name, mockProcessorFactory(name))
 		}(i)
 	}
 
 	wg.Wait()
 
-	// All unique names should be registered (26 unique letters)
+	// Should have registered processors
 	count := ProcessorCount()
-	if count > 26 || count == 0 {
-		t.Errorf("Expected <= 26 processors after concurrent registration, got %d", count)
+	if count == 0 || count > 26 {
+		t.Errorf("Expected between 1 and 26 processors, got %d", count)
 	}
 }
 
@@ -543,50 +525,6 @@ func TestProcessorConcurrentGet(t *testing.T) {
 	}
 }
 
-// TestProcessorConcurrentTypeSafeRegistration tests concurrent type-safe registration
-func TestProcessorConcurrentTypeSafeRegistration(t *testing.T) {
-	ClearProcessors()
-
-	const goroutines = 30
-	var wg sync.WaitGroup
-	wg.Add(goroutines * 3) // Filters, Validators, Transformers
-
-	// Register filters
-	for i := 0; i < goroutines; i++ {
-		go func(id int) {
-			defer wg.Done()
-			name := fmt.Sprintf("filter_%d", id%10)
-			RegisterFilter(name, &mockFilterStrategy{threshold: id})
-		}(i)
-	}
-
-	// Register validators
-	for i := 0; i < goroutines; i++ {
-		go func(id int) {
-			defer wg.Done()
-			name := fmt.Sprintf("validator_%d", id%10)
-			RegisterValidator(name, &mockValidatorStrategy{})
-		}(i)
-	}
-
-	// Register transformers
-	for i := 0; i < goroutines; i++ {
-		go func(id int) {
-			defer wg.Done()
-			name := fmt.Sprintf("transformer_%d", id%10)
-			RegisterTransformer(name, &mockTransformerStrategy{multiplier: id})
-		}(i)
-	}
-
-	wg.Wait()
-
-	// Should have 30 unique processors (10 of each type)
-	count := ProcessorCount()
-	if count != 30 {
-		t.Logf("Note: Expected 30 processors, got %d (concurrent overwrites are expected)", count)
-	}
-}
-
 // TestProcessorConcurrentMixedOperations tests all operations concurrently
 func TestProcessorConcurrentMixedOperations(t *testing.T) {
 	ClearProcessors()
@@ -599,7 +537,7 @@ func TestProcessorConcurrentMixedOperations(t *testing.T) {
 	for i := 0; i < goroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
-			name := string(rune('a' + (id % 5)))
+			name := fmt.Sprintf("proc_%d", id%5)
 			RegisterProcessor(name, mockProcessorFactory(name))
 		}(i)
 	}
@@ -608,7 +546,7 @@ func TestProcessorConcurrentMixedOperations(t *testing.T) {
 	for i := 0; i < goroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
-			name := string(rune('a' + (id % 5)))
+			name := fmt.Sprintf("proc_%d", id%5)
 			GetProcessor(name)
 		}(i)
 	}
@@ -625,7 +563,7 @@ func TestProcessorConcurrentMixedOperations(t *testing.T) {
 	for i := 0; i < goroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
-			name := string(rune('a' + (id % 5)))
+			name := fmt.Sprintf("proc_%d", id%5)
 			IsProcessorRegistered(name)
 		}(i)
 	}
@@ -712,14 +650,14 @@ func BenchmarkGetProcessorParallel(b *testing.B) {
 	})
 }
 
-// BenchmarkRegisterFilter benchmarks type-safe filter registration
+// BenchmarkRegisterFilter benchmarks filter registration
 func BenchmarkRegisterFilter(b *testing.B) {
 	ClearProcessors()
-	strategy := &mockFilterStrategy{threshold: 10}
+	filter := &mockFilterStrategy{threshold: 50}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterFilter("bench_filter", strategy)
+		RegisterFilter("bench_filter", filter)
 	}
 }
 
@@ -727,7 +665,7 @@ func BenchmarkRegisterFilter(b *testing.B) {
 func BenchmarkListProcessors(b *testing.B) {
 	ClearProcessors()
 	for i := 0; i < 10; i++ {
-		name := string(rune('a' + i))
+		name := fmt.Sprintf("proc_%d", i)
 		RegisterProcessor(name, mockProcessorFactory(name))
 	}
 

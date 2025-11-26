@@ -2,6 +2,7 @@ package provider
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -19,7 +20,12 @@ func TestMockProviderWithLogger(t *testing.T) {
 		Component: "provider.mock.test",
 	})
 
-	provider := NewMockProvider().(*MockProvider)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice", "score": 95},
+		{"id": 2, "name": "Bob", "score": 88},
+	}
+
+	provider := NewMockProvider(testData)
 	result := provider.WithLogger(logger)
 
 	// Should return provider for chaining
@@ -35,7 +41,14 @@ func TestMockProviderWithLogger(t *testing.T) {
 
 // TestMockProviderGetLoggerDefault tests lazy logger initialization
 func TestMockProviderGetLoggerDefault(t *testing.T) {
-	provider := &MockProvider{logger: nil}
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
+
+	provider := &MockProvider{
+		Data:   testData,
+		logger: nil,
+	}
 
 	logger := provider.getLogger()
 
@@ -65,9 +78,14 @@ func TestMockProviderFetchLogging(t *testing.T) {
 		Component: "provider.mock",
 	})
 
-	provider := NewMockProvider().(*MockProvider).WithLogger(logger)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
 
-	_, err := provider.Fetch()
+	provider := NewMockProvider(testData).WithLogger(logger)
+
+	ctx := context.Background()
+	_, err := provider.Fetch(ctx)
 	if err != nil {
 		t.Fatalf("Fetch() returned error: %v", err)
 	}
@@ -110,9 +128,14 @@ func TestMockProviderFetchLoggingDebug(t *testing.T) {
 		Component: "provider.mock",
 	})
 
-	provider := NewMockProvider().(*MockProvider).WithLogger(logger)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
 
-	_, err := provider.Fetch()
+	provider := NewMockProvider(testData).WithLogger(logger)
+
+	ctx := context.Background()
+	_, err := provider.Fetch(ctx)
 	if err != nil {
 		t.Fatalf("Fetch() returned error: %v", err)
 	}
@@ -140,9 +163,15 @@ func TestMockProviderFetchLoggingMetrics(t *testing.T) {
 		Component: "provider.mock",
 	})
 
-	provider := NewMockProvider().(*MockProvider).WithLogger(logger)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+		{"id": 2, "name": "Bob"},
+	}
 
-	data, err := provider.Fetch()
+	provider := NewMockProvider(testData).WithLogger(logger)
+
+	ctx := context.Background()
+	data, err := provider.Fetch(ctx)
 	if err != nil {
 		t.Fatalf("Fetch() returned error: %v", err)
 	}
@@ -202,9 +231,14 @@ func TestMockProviderFetchLoggingTextFormat(t *testing.T) {
 		Component: "provider.mock",
 	})
 
-	provider := NewMockProvider().(*MockProvider).WithLogger(logger)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
 
-	_, err := provider.Fetch()
+	provider := NewMockProvider(testData).WithLogger(logger)
+
+	ctx := context.Background()
+	_, err := provider.Fetch(ctx)
 	if err != nil {
 		t.Fatalf("Fetch() returned error: %v", err)
 	}
@@ -235,16 +269,22 @@ func TestMockProviderConcurrentFetchLogging(t *testing.T) {
 		Component: "provider.mock",
 	})
 
-	provider := NewMockProvider().(*MockProvider).WithLogger(logger)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
+
+	provider := NewMockProvider(testData).WithLogger(logger)
 
 	const goroutines = 10
 	errors := make(chan error, goroutines)
 	done := make(chan struct{}, goroutines)
 
+	ctx := context.Background()
+
 	// Launch concurrent fetches
 	for i := 0; i < goroutines; i++ {
 		go func() {
-			_, err := provider.Fetch()
+			_, err := provider.Fetch(ctx)
 			if err != nil {
 				errors <- err
 			}
@@ -280,10 +320,15 @@ func TestMockProviderConcurrentFetchLogging(t *testing.T) {
 // TestMockProviderLoggingWithoutExplicitLogger tests default logger behavior
 func TestMockProviderLoggingWithoutExplicitLogger(t *testing.T) {
 	// Create provider without setting logger
-	provider := NewMockProvider().(*MockProvider)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
 
+	provider := NewMockProvider(testData)
+
+	ctx := context.Background()
 	// Should not panic and should create default logger
-	data, err := provider.Fetch()
+	data, err := provider.Fetch(ctx)
 
 	if err != nil {
 		t.Fatalf("Fetch() returned error: %v", err)
@@ -309,21 +354,33 @@ func BenchmarkMockProviderFetchWithLogging(b *testing.B) {
 		Component: "provider.mock",
 	})
 
-	provider := NewMockProvider().(*MockProvider).WithLogger(logger)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
+
+	provider := NewMockProvider(testData).WithLogger(logger)
+
+	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		provider.Fetch()
+		provider.Fetch(ctx)
 	}
 }
 
 // BenchmarkMockProviderFetchWithoutLogging benchmarks fetch without explicit logger
 func BenchmarkMockProviderFetchWithoutLogging(b *testing.B) {
-	provider := NewMockProvider().(*MockProvider)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
+
+	provider := NewMockProvider(testData)
+
+	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		provider.Fetch()
+		provider.Fetch(ctx)
 	}
 }
 
@@ -337,10 +394,16 @@ func BenchmarkMockProviderFetchDebugLogging(b *testing.B) {
 		Component: "provider.mock",
 	})
 
-	provider := NewMockProvider().(*MockProvider).WithLogger(logger)
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "Alice"},
+	}
+
+	provider := NewMockProvider(testData).WithLogger(logger)
+
+	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		provider.Fetch()
+		provider.Fetch(ctx)
 	}
 }

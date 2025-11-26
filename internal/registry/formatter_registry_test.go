@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"sync"
 	"testing"
 
@@ -12,7 +13,7 @@ type mockFormatter struct {
 	name string
 }
 
-func (m *mockFormatter) Format(data []map[string]interface{}) ([]byte, error) {
+func (m *mockFormatter) Format(ctx context.Context, data []map[string]interface{}) ([]byte, error) {
 	return []byte(m.name), nil
 }
 
@@ -279,8 +280,9 @@ func TestOverwriteRegistration(t *testing.T) {
 	f2, _ := GetFormatter("test")
 
 	// Get actual formatted output to verify different factories
-	out1, _ := f1.Format(nil)
-	out2, _ := f2.Format(nil)
+	ctx := context.Background()
+	out1, _ := f1.Format(ctx, nil)
+	out2, _ := f2.Format(ctx, nil)
 
 	if string(out1) == string(out2) {
 		t.Error("Expected different factory output after overwrite")

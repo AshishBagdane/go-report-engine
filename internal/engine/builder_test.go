@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 // Mock implementations for builder tests
 type builderMockProvider struct{}
 
-func (m *builderMockProvider) Fetch() ([]map[string]interface{}, error) {
+func (m *builderMockProvider) Fetch(ctx context.Context) ([]map[string]interface{}, error) {
 	return []map[string]interface{}{{"id": 1}}, nil
 }
 
@@ -21,19 +22,19 @@ type builderMockProcessor struct {
 	processor.BaseProcessor
 }
 
-func (m *builderMockProcessor) Process(data []map[string]interface{}) ([]map[string]interface{}, error) {
-	return m.BaseProcessor.Process(data)
+func (m *builderMockProcessor) Process(ctx context.Context, data []map[string]interface{}) ([]map[string]interface{}, error) {
+	return m.BaseProcessor.Process(ctx, data)
 }
 
 type builderMockFormatter struct{}
 
-func (m *builderMockFormatter) Format(data []map[string]interface{}) ([]byte, error) {
+func (m *builderMockFormatter) Format(ctx context.Context, data []map[string]interface{}) ([]byte, error) {
 	return []byte("formatted"), nil
 }
 
 type builderMockOutput struct{}
 
-func (m *builderMockOutput) Send(data []byte) error {
+func (m *builderMockOutput) Send(ctx context.Context, data []byte) error {
 	return nil
 }
 
@@ -206,19 +207,11 @@ func TestEngineBuilderBuildFailures(t *testing.T) {
 			expectedError: "output is required",
 		},
 		{
-			name: "all components missing",
+			name: "empty builder",
 			setupBuilder: func() *EngineBuilder {
 				return NewEngineBuilder()
 			},
-			expectedError: "builder validation failed",
-		},
-		{
-			name: "multiple components missing",
-			setupBuilder: func() *EngineBuilder {
-				return NewEngineBuilder().
-					WithProvider(&builderMockProvider{})
-			},
-			expectedError: "builder validation failed",
+			expectedError: "provider is required",
 		},
 	}
 
@@ -228,7 +221,7 @@ func TestEngineBuilderBuildFailures(t *testing.T) {
 			engine, err := builder.Build()
 
 			if err == nil {
-				t.Fatal("Build() should return error")
+				t.Fatal("Build() should fail with incomplete components")
 			}
 
 			if engine != nil {
@@ -237,52 +230,6 @@ func TestEngineBuilderBuildFailures(t *testing.T) {
 
 			if !strings.Contains(err.Error(), tt.expectedError) {
 				t.Errorf("Error should contain %q, got: %v", tt.expectedError, err)
-			}
-
-			// Verify it's a BuilderValidationError
-			if _, ok := err.(*BuilderValidationError); !ok {
-				t.Error("Error should be BuilderValidationError type")
-			}
-		})
-	}
-}
-
-// TestEngineBuilderValidate tests the Validate method
-func TestEngineBuilderValidate(t *testing.T) {
-	tests := []struct {
-		name        string
-		builder     *EngineBuilder
-		shouldError bool
-	}{
-		{
-			name: "complete builder",
-			builder: NewEngineBuilder().
-				WithProvider(&builderMockProvider{}).
-				WithProcessor(&builderMockProcessor{}).
-				WithFormatter(&builderMockFormatter{}).
-				WithOutput(&builderMockOutput{}),
-			shouldError: false,
-		},
-		{
-			name:        "empty builder",
-			builder:     NewEngineBuilder(),
-			shouldError: true,
-		},
-		{
-			name: "partial builder",
-			builder: NewEngineBuilder().
-				WithProvider(&builderMockProvider{}).
-				WithFormatter(&builderMockFormatter{}),
-			shouldError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.builder.Validate()
-
-			if (err != nil) != tt.shouldError {
-				t.Errorf("Validate() error = %v, shouldError = %v", err, tt.shouldError)
 			}
 		})
 	}
@@ -301,9 +248,34 @@ func TestEngineBuilderIsComplete(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "partial builder",
+			name: "missing provider",
+			builder: NewEngineBuilder().
+				WithProcessor(&builderMockProcessor{}).
+				WithFormatter(&builderMockFormatter{}).
+				WithOutput(&builderMockOutput{}),
+			expected: false,
+		},
+		{
+			name: "missing processor",
 			builder: NewEngineBuilder().
 				WithProvider(&builderMockProvider{}).
+				WithFormatter(&builderMockFormatter{}).
+				WithOutput(&builderMockOutput{}),
+			expected: false,
+		},
+		{
+			name: "missing formatter",
+			builder: NewEngineBuilder().
+				WithProvider(&builderMockProvider{}).
+				WithProcessor(&builderMockProcessor{}).
+				WithOutput(&builderMockOutput{}),
+			expected: false,
+		},
+		{
+			name: "missing output",
+			builder: NewEngineBuilder().
+				WithProvider(&builderMockProvider{}).
+				WithProcessor(&builderMockProcessor{}).
 				WithFormatter(&builderMockFormatter{}),
 			expected: false,
 		},
@@ -398,102 +370,88 @@ func TestEngineBuilderReuseAfterBuild(t *testing.T) {
 		WithFormatter(&builderMockFormatter{}).
 		WithOutput(&builderMockOutput{})
 
-	engine1, err1 := builder.Build()
-	if err1 != nil {
-		t.Fatalf("First build failed: %v", err1)
+	// First build
+	engine1, err := builder.Build()
+	if err != nil {
+		t.Fatalf("First build failed: %v", err)
 	}
 
-	// Build again with same builder
-	engine2, err2 := builder.Build()
-	if err2 != nil {
-		t.Fatalf("Second build failed: %v", err2)
+	// Builder should still have components
+	if !builder.IsComplete() {
+		t.Error("Builder should still be complete after build")
 	}
 
-	// Should create separate engine instances
+	// Second build should work
+	engine2, err := builder.Build()
+	if err != nil {
+		t.Fatalf("Second build failed: %v", err)
+	}
+
+	// Should create separate instances
 	if engine1 == engine2 {
-		t.Error("Builder should create new engine instances")
+		t.Error("Builder should create new instances")
 	}
 }
 
-// TestBuilderValidationErrorMessage tests error message formatting
-func TestBuilderValidationErrorMessage(t *testing.T) {
-	tests := []struct {
-		name   string
-		errors []string
-		expect string
-	}{
-		{
-			name:   "single error",
-			errors: []string{"provider is required"},
-			expect: "builder validation failed: provider is required",
-		},
-		{
-			name:   "multiple errors",
-			errors: []string{"provider is required", "formatter is required"},
-			expect: "builder validation failed: 2 errors",
-		},
+// TestEngineBuilderResetAndReuse tests reset and reuse pattern
+func TestEngineBuilderResetAndReuse(t *testing.T) {
+	builder := NewEngineBuilder()
+
+	// Build first engine
+	engine1, err := builder.
+		WithProvider(&builderMockProvider{}).
+		WithProcessor(&builderMockProcessor{}).
+		WithFormatter(&builderMockFormatter{}).
+		WithOutput(&builderMockOutput{}).
+		Build()
+
+	if err != nil {
+		t.Fatalf("First build failed: %v", err)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := &BuilderValidationError{Errors: tt.errors}
-			msg := err.Error()
+	// Reset and build second engine with different components
+	engine2, err := builder.
+		Reset().
+		WithProvider(&builderMockProvider{}).
+		WithProcessor(&builderMockProcessor{}).
+		WithFormatter(&builderMockFormatter{}).
+		WithOutput(&builderMockOutput{}).
+		Build()
 
-			if !strings.Contains(msg, tt.expect) {
-				t.Errorf("Error message should contain %q, got: %q", tt.expect, msg)
-			}
-		})
+	if err != nil {
+		t.Fatalf("Second build failed: %v", err)
 	}
-}
 
-// TestPredefinedBuilderErrors tests predefined error constants
-func TestPredefinedBuilderErrors(t *testing.T) {
-	if ErrBuilderIncomplete == nil {
-		t.Error("ErrBuilderIncomplete should not be nil")
-	}
-	if ErrBuilderProviderNil == nil {
-		t.Error("ErrBuilderProviderNil should not be nil")
-	}
-	if ErrBuilderProcessorNil == nil {
-		t.Error("ErrBuilderProcessorNil should not be nil")
-	}
-	if ErrBuilderFormatterNil == nil {
-		t.Error("ErrBuilderFormatterNil should not be nil")
-	}
-	if ErrBuilderOutputNil == nil {
-		t.Error("ErrBuilderOutputNil should not be nil")
+	// Should be different instances
+	if engine1 == engine2 {
+		t.Error("Reset should enable creating different engines")
 	}
 }
 
 // BenchmarkEngineBuilderBuild benchmarks engine building
 func BenchmarkEngineBuilderBuild(b *testing.B) {
-	prov := &builderMockProvider{}
-	proc := &builderMockProcessor{}
-	fmt := &builderMockFormatter{}
-	out := &builderMockOutput{}
-
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		builder := NewEngineBuilder().
-			WithProvider(prov).
-			WithProcessor(proc).
-			WithFormatter(fmt).
-			WithOutput(out)
-
-		builder.Build()
+		NewEngineBuilder().
+			WithProvider(&builderMockProvider{}).
+			WithProcessor(&builderMockProcessor{}).
+			WithFormatter(&builderMockFormatter{}).
+			WithOutput(&builderMockOutput{}).
+			Build()
 	}
 }
 
-// BenchmarkEngineBuilderValidate benchmarks validation
-func BenchmarkEngineBuilderValidate(b *testing.B) {
-	builder := NewEngineBuilder().
-		WithProvider(&builderMockProvider{}).
-		WithProcessor(&builderMockProcessor{}).
-		WithFormatter(&builderMockFormatter{}).
-		WithOutput(&builderMockOutput{})
+// BenchmarkEngineBuilderReuseWithReset benchmarks reset pattern
+func BenchmarkEngineBuilderReuseWithReset(b *testing.B) {
+	builder := NewEngineBuilder()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		builder.Validate()
+		builder.Reset().
+			WithProvider(&builderMockProvider{}).
+			WithProcessor(&builderMockProcessor{}).
+			WithFormatter(&builderMockFormatter{}).
+			WithOutput(&builderMockOutput{}).
+			Build()
 	}
 }

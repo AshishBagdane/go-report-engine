@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -19,9 +20,18 @@ func setupRegistries() {
 	registry.ClearOutputs()
 
 	// Register core components
-	registry.RegisterProvider("mock", provider.NewMockProvider)
-	registry.RegisterFormatter("json", formatter.NewJSONFormatter)
-	registry.RegisterOutput("console", output.NewConsoleOutput)
+	registry.RegisterProvider("mock", func() provider.ProviderStrategy {
+		return provider.NewMockProvider([]map[string]interface{}{
+			{"id": 1, "name": "Alice", "score": 95},
+			{"id": 2, "name": "Bob", "score": 88},
+		})
+	})
+	registry.RegisterFormatter("json", func() formatter.FormatStrategy {
+		return formatter.NewJSONFormatter("  ")
+	})
+	registry.RegisterOutput("console", func() output.OutputStrategy {
+		return output.NewConsoleOutput()
+	})
 }
 
 // TestNewEngineFromConfigSuccess tests successful engine creation
@@ -412,7 +422,8 @@ func TestNewEngineFromConfigRunnable(t *testing.T) {
 
 	// Should be able to run the engine
 	// Note: This will output to console, but that's okay for tests
-	err = eng.Run()
+	ctx := context.Background()
+	err = eng.RunWithContext(ctx)
 	if err != nil {
 		t.Errorf("Created engine Run() failed: %v", err)
 	}

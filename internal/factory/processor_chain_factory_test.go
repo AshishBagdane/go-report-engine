@@ -1,6 +1,7 @@
 package factory
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -101,7 +102,8 @@ func TestBuildProcessorChainEmpty(t *testing.T) {
 		{"id": 1},
 	}
 
-	result, err := chain.Process(testData)
+	ctx := context.Background()
+	result, err := chain.Process(ctx, testData)
 	if err != nil {
 		t.Errorf("Empty chain Process() failed: %v", err)
 	}
@@ -134,7 +136,8 @@ func TestBuildProcessorChainSingle(t *testing.T) {
 		{"id": 2, "value": 60},
 	}
 
-	result, err := chain.Process(testData)
+	ctx := context.Background()
+	result, err := chain.Process(ctx, testData)
 	if err != nil {
 		t.Fatalf("Chain Process() failed: %v", err)
 	}
@@ -170,7 +173,8 @@ func TestBuildProcessorChainMultiple(t *testing.T) {
 		{"id": 1, "value": 60, "required": "yes"},
 	}
 
-	result, err := chain.Process(testData)
+	ctx := context.Background()
+	result, err := chain.Process(ctx, testData)
 	if err != nil {
 		t.Fatalf("Chain Process() failed: %v", err)
 	}
@@ -233,7 +237,8 @@ func TestBuildProcessorChainConfigurable(t *testing.T) {
 		{"id": 2, "value": 60},
 	}
 
-	result, err := chain.Process(testData)
+	ctx := context.Background()
+	result, err := chain.Process(ctx, testData)
 	if err != nil {
 		t.Fatalf("Chain Process() failed: %v", err)
 	}
@@ -325,7 +330,8 @@ func TestBuildProcessorChainOrdering(t *testing.T) {
 		{"id": 1, "required": "yes"},
 	}
 
-	result, err := chain.Process(testData)
+	ctx := context.Background()
+	result, err := chain.Process(ctx, testData)
 	if err != nil {
 		t.Fatalf("Chain Process() failed: %v", err)
 	}
@@ -356,7 +362,8 @@ func TestBuildProcessorChainErrorPropagation(t *testing.T) {
 		{"id": 1, "value": 60}, // Missing "required"
 	}
 
-	result, err := chain.Process(testData)
+	ctx := context.Background()
+	result, err := chain.Process(ctx, testData)
 
 	if err == nil {
 		t.Fatal("Expected validation error")
@@ -390,7 +397,8 @@ func TestBuildProcessorChainNilConfigs(t *testing.T) {
 		{"id": 1},
 	}
 
-	result, err := chain.Process(testData)
+	ctx := context.Background()
+	result, err := chain.Process(ctx, testData)
 	if err != nil {
 		t.Errorf("Chain Process() failed: %v", err)
 	}
@@ -421,7 +429,8 @@ func TestBuildProcessorChainLongChain(t *testing.T) {
 		{"id": 1, "value": 60, "required": "yes"},
 	}
 
-	result, err := chain.Process(testData)
+	ctx := context.Background()
+	result, err := chain.Process(ctx, testData)
 	if err != nil {
 		t.Fatalf("Long chain Process() failed: %v", err)
 	}

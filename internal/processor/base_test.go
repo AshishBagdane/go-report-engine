@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"context"
 	"fmt"
 	"testing"
 )
@@ -13,7 +14,8 @@ func TestBaseProcessorZeroValue(t *testing.T) {
 		{"id": 1, "name": "test"},
 	}
 
-	result, err := proc.Process(testData)
+	ctx := context.Background()
+	result, err := proc.Process(ctx, testData)
 
 	if err != nil {
 		t.Errorf("Process() returned unexpected error: %v", err)
@@ -41,7 +43,8 @@ func TestBaseProcessorSetNext(t *testing.T) {
 		{"id": 1},
 	}
 
-	result, err := proc1.Process(testData)
+	ctx := context.Background()
+	result, err := proc1.Process(ctx, testData)
 	if err != nil {
 		t.Errorf("Process() with next processor failed: %v", err)
 	}
@@ -91,9 +94,10 @@ func TestBaseProcessorProcessPassthrough(t *testing.T) {
 		},
 	}
 
+	ctx := context.Background()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := proc.Process(tt.input)
+			result, err := proc.Process(ctx, tt.input)
 
 			if err != nil {
 				t.Errorf("Process() returned error: %v", err)
@@ -132,7 +136,8 @@ func TestBaseProcessorChaining(t *testing.T) {
 		{"id": 1, "name": "test"},
 	}
 
-	result, err := proc1.Process(testData)
+	ctx := context.Background()
+	result, err := proc1.Process(ctx, testData)
 
 	if err != nil {
 		t.Errorf("Chained Process() failed: %v", err)
@@ -153,14 +158,14 @@ type mockFilterProcessor struct {
 	keepCondition func(map[string]interface{}) bool
 }
 
-func (m *mockFilterProcessor) Process(data []map[string]interface{}) ([]map[string]interface{}, error) {
+func (m *mockFilterProcessor) Process(ctx context.Context, data []map[string]interface{}) ([]map[string]interface{}, error) {
 	var filtered []map[string]interface{}
 	for _, row := range data {
 		if m.keepCondition(row) {
 			filtered = append(filtered, row)
 		}
 	}
-	return m.BaseProcessor.Process(filtered)
+	return m.BaseProcessor.Process(ctx, filtered)
 }
 
 // TestBaseProcessorWithCustomProcessor tests chaining with custom processor
@@ -184,7 +189,8 @@ func TestBaseProcessorWithCustomProcessor(t *testing.T) {
 		{"id": 3, "name": "Charlie"},
 	}
 
-	result, err := filter.Process(testData)
+	ctx := context.Background()
+	result, err := filter.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() failed: %v", err)
@@ -210,11 +216,11 @@ type mockErrorProcessor struct {
 	errorMsg    string
 }
 
-func (m *mockErrorProcessor) Process(data []map[string]interface{}) ([]map[string]interface{}, error) {
+func (m *mockErrorProcessor) Process(ctx context.Context, data []map[string]interface{}) ([]map[string]interface{}, error) {
 	if m.shouldError {
 		return nil, fmt.Errorf("%s", m.errorMsg)
 	}
-	return m.BaseProcessor.Process(data)
+	return m.BaseProcessor.Process(ctx, data)
 }
 
 // TestBaseProcessorErrorPropagation tests error handling in chain
@@ -231,7 +237,8 @@ func TestBaseProcessorErrorPropagation(t *testing.T) {
 		{"id": 1},
 	}
 
-	result, err := errorProc.Process(testData)
+	ctx := context.Background()
+	result, err := errorProc.Process(ctx, testData)
 
 	if err == nil {
 		t.Fatal("Expected error but got nil")
@@ -251,7 +258,8 @@ func TestBaseProcessorErrorPropagation(t *testing.T) {
 func TestBaseProcessorNilData(t *testing.T) {
 	proc := &BaseProcessor{}
 
-	result, err := proc.Process(nil)
+	ctx := context.Background()
+	result, err := proc.Process(ctx, nil)
 
 	if err != nil {
 		t.Errorf("Process(nil) returned error: %v", err)
@@ -259,6 +267,24 @@ func TestBaseProcessorNilData(t *testing.T) {
 
 	if result != nil {
 		t.Error("Process(nil) should return nil")
+	}
+}
+
+// TestBaseProcessorContextCancellation tests context cancellation
+func TestBaseProcessorContextCancellation(t *testing.T) {
+	proc := &BaseProcessor{}
+
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "test"},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	_, err := proc.Process(ctx, testData)
+
+	if err != context.Canceled {
+		t.Errorf("Expected context.Canceled, got: %v", err)
 	}
 }
 
@@ -281,7 +307,8 @@ func TestBaseProcessorLargeDataset(t *testing.T) {
 		}
 	}
 
-	result, err := proc.Process(testData)
+	ctx := context.Background()
+	result, err := proc.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() failed on large dataset: %v", err)
@@ -304,9 +331,11 @@ func TestBaseProcessorConcurrentAccess(t *testing.T) {
 	errors := make(chan error, goroutines)
 	results := make(chan []map[string]interface{}, goroutines)
 
+	ctx := context.Background()
+
 	for i := 0; i < goroutines; i++ {
 		go func() {
-			result, err := proc.Process(testData)
+			result, err := proc.Process(ctx, testData)
 			if err != nil {
 				errors <- err
 				return
@@ -334,9 +363,11 @@ func BenchmarkBaseProcessorProcess(b *testing.B) {
 		{"id": 1, "name": "test", "value": 42},
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		proc.Process(testData)
+		proc.Process(ctx, testData)
 	}
 }
 
@@ -352,9 +383,11 @@ func BenchmarkBaseProcessorProcessLarge(b *testing.B) {
 		}
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		proc.Process(testData)
+		proc.Process(ctx, testData)
 	}
 }
 
@@ -371,8 +404,10 @@ func BenchmarkBaseProcessorChain(b *testing.B) {
 		{"id": 1, "name": "test"},
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		proc1.Process(testData)
+		proc1.Process(ctx, testData)
 	}
 }

@@ -232,7 +232,8 @@ func (r *ReportEngine) fetchDataWithContext(ctx context.Context) ([]map[string]i
 
 	logger.InfoContext(ctx, "fetch stage starting")
 
-	data, err := r.Provider.Fetch()
+	// UPDATED: Pass context to provider
+	data, err := r.Provider.Fetch(ctx)
 	duration := time.Since(startTime)
 
 	if err != nil {
@@ -276,7 +277,8 @@ func (r *ReportEngine) processDataWithContext(ctx context.Context, data []map[st
 		"input_records", inputCount,
 	)
 
-	processed, err := r.Processor.Process(data)
+	// UPDATED: Pass context to processor
+	processed, err := r.Processor.Process(ctx, data)
 	duration := time.Since(startTime)
 
 	if err != nil {
@@ -332,7 +334,8 @@ func (r *ReportEngine) formatDataWithContext(ctx context.Context, data []map[str
 		"record_count", recordCount,
 	)
 
-	formatted, err := r.Formatter.Format(data)
+	// UPDATED: Pass context to formatter
+	formatted, err := r.Formatter.Format(ctx, data)
 	duration := time.Since(startTime)
 
 	if err != nil {
@@ -390,7 +393,8 @@ func (r *ReportEngine) outputDataWithContext(ctx context.Context, data []byte) e
 		"data_size_bytes", dataSize,
 	)
 
-	err := r.Output.Send(data)
+	// UPDATED: Pass context to output
+	err := r.Output.Send(ctx, data)
 	duration := time.Since(startTime)
 
 	if err != nil {

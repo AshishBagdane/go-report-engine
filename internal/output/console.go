@@ -3,59 +3,66 @@ package output
 import (
 	"context"
 	"fmt"
-	"time"
-
-	"github.com/AshishBagdane/report-engine/internal/logging"
 )
 
 // ConsoleOutput writes formatted data to stdout.
-type ConsoleOutput struct {
-	logger *logging.Logger
-}
+// It's the simplest output strategy, useful for testing and debugging.
+//
+// Context handling:
+//   - Checks context before writing
+//   - Returns ctx.Err() if canceled
+//   - Actual write is fast (synchronous to stdout)
+//
+// Thread-safe: Yes. Multiple goroutines can safely use the same
+// ConsoleOutput instance, though output may be interleaved.
+type ConsoleOutput struct{}
 
-func NewConsoleOutput() OutputStrategy {
+// NewConsoleOutput creates a new ConsoleOutput instance.
+// This is the recommended way to create a ConsoleOutput.
+//
+// Example:
+//
+//	output := output.NewConsoleOutput()
+//	err := output.Send(ctx, jsonData)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+// Returns:
+//   - *ConsoleOutput: A new output instance
+func NewConsoleOutput() *ConsoleOutput {
 	return &ConsoleOutput{}
 }
 
-// WithLogger sets a custom logger for the output.
-func (c *ConsoleOutput) WithLogger(logger *logging.Logger) *ConsoleOutput {
-	c.logger = logger
-	return c
-}
-
-// getLogger returns the output's logger, creating a default one if needed.
-func (c *ConsoleOutput) getLogger() *logging.Logger {
-	if c.logger == nil {
-		c.logger = logging.NewLogger(logging.Config{
-			Level:     logging.LevelInfo,
-			Format:    logging.FormatJSON,
-			Component: "output.console",
-		})
+// Send writes data to stdout followed by a newline.
+// The data is written as-is without additional formatting.
+//
+// Context handling:
+//   - Checks context before writing
+//   - Returns ctx.Err() if already canceled
+//   - Write operation is atomic and fast
+//
+// Note: The actual write to stdout is not interruptible once started,
+// but this is typically a fast operation. For writes to slower destinations
+// (files, network), implementations should check context more frequently.
+//
+// Parameters:
+//   - ctx: Context for cancellation and timeout
+//   - data: Formatted data to write to stdout
+//
+// Returns:
+//   - error: ctx.Err() if context canceled, or write error
+func (c *ConsoleOutput) Send(ctx context.Context, data []byte) error {
+	// Check if context is already canceled
+	// Provides fast path before I/O operation
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
 	}
-	return c.logger
-}
 
-func (c *ConsoleOutput) Send(data []byte) error {
-	logger := c.getLogger()
-	ctx := context.Background()
-	startTime := time.Now()
-	dataSize := len(data)
-
-	logger.InfoContext(ctx, "send starting",
-		"output_type", "console",
-		"destination", "stdout",
-		"data_size_bytes", dataSize,
-	)
-
-	fmt.Println(string(data))
-
-	duration := time.Since(startTime)
-	logger.InfoContext(ctx, "send completed",
-		"output_type", "console",
-		"destination", "stdout",
-		"data_size_bytes", dataSize,
-		"duration_ms", duration.Milliseconds(),
-	)
-
-	return nil
+	// Write data to stdout
+	// fmt.Println adds a newline automatically
+	_, err := fmt.Println(string(data))
+	return err
 }

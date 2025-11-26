@@ -1,12 +1,19 @@
 package provider
 
 import (
+	"context"
 	"testing"
 )
 
+// Default test data for tests
+var testData = []map[string]interface{}{
+	{"id": 1, "name": "Alice", "score": 95},
+	{"id": 2, "name": "Bob", "score": 88},
+}
+
 // TestNewMockProvider tests the factory function
 func TestNewMockProvider(t *testing.T) {
-	provider := NewMockProvider()
+	provider := NewMockProvider(testData)
 
 	if provider == nil {
 		t.Fatal("NewMockProvider() returned nil")
@@ -18,9 +25,10 @@ func TestNewMockProvider(t *testing.T) {
 
 // TestMockProviderFetch tests basic fetch functionality
 func TestMockProviderFetch(t *testing.T) {
-	provider := NewMockProvider()
+	provider := NewMockProvider(testData)
 
-	data, err := provider.Fetch()
+	ctx := context.Background()
+	data, err := provider.Fetch(ctx)
 
 	if err != nil {
 		t.Fatalf("Fetch() returned unexpected error: %v", err)
@@ -39,9 +47,10 @@ func TestMockProviderFetch(t *testing.T) {
 
 // TestMockProviderDataStructure tests the structure of returned data
 func TestMockProviderDataStructure(t *testing.T) {
-	provider := NewMockProvider()
+	provider := NewMockProvider(testData)
 
-	data, err := provider.Fetch()
+	ctx := context.Background()
+	data, err := provider.Fetch(ctx)
 	if err != nil {
 		t.Fatalf("Fetch() failed: %v", err)
 	}
@@ -77,9 +86,10 @@ func TestMockProviderDataStructure(t *testing.T) {
 
 // TestMockProviderDataValues tests specific data values
 func TestMockProviderDataValues(t *testing.T) {
-	provider := NewMockProvider()
+	provider := NewMockProvider(testData)
 
-	data, err := provider.Fetch()
+	ctx := context.Background()
+	data, err := provider.Fetch(ctx)
 	if err != nil {
 		t.Fatalf("Fetch() failed: %v", err)
 	}
@@ -132,16 +142,18 @@ func TestMockProviderDataValues(t *testing.T) {
 
 // TestMockProviderMultipleCalls tests that multiple calls work correctly
 func TestMockProviderMultipleCalls(t *testing.T) {
-	provider := NewMockProvider()
+	provider := NewMockProvider(testData)
+
+	ctx := context.Background()
 
 	// First call
-	data1, err1 := provider.Fetch()
+	data1, err1 := provider.Fetch(ctx)
 	if err1 != nil {
 		t.Fatalf("First Fetch() failed: %v", err1)
 	}
 
 	// Second call
-	data2, err2 := provider.Fetch()
+	data2, err2 := provider.Fetch(ctx)
 	if err2 != nil {
 		t.Fatalf("Second Fetch() failed: %v", err2)
 	}
@@ -159,18 +171,34 @@ func TestMockProviderMultipleCalls(t *testing.T) {
 	}
 }
 
+// TestMockProviderContextCancellation tests context cancellation
+func TestMockProviderContextCancellation(t *testing.T) {
+	provider := NewMockProvider(testData)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	_, err := provider.Fetch(ctx)
+
+	if err != context.Canceled {
+		t.Errorf("Expected context.Canceled, got: %v", err)
+	}
+}
+
 // TestMockProviderConcurrentAccess tests concurrent calls to Fetch
 func TestMockProviderConcurrentAccess(t *testing.T) {
-	provider := NewMockProvider()
+	provider := NewMockProvider(testData)
 
 	const goroutines = 10
 	errors := make(chan error, goroutines)
 	results := make(chan []map[string]interface{}, goroutines)
 
+	ctx := context.Background()
+
 	// Launch concurrent fetches
 	for i := 0; i < goroutines; i++ {
 		go func() {
-			data, err := provider.Fetch()
+			data, err := provider.Fetch(ctx)
 			if err != nil {
 				errors <- err
 				return
@@ -205,40 +233,55 @@ func TestMockProviderZeroValue(t *testing.T) {
 	// Create zero value (not via factory)
 	var provider MockProvider
 
-	data, err := provider.Fetch()
+	ctx := context.Background()
+	data, err := provider.Fetch(ctx)
 
 	if err != nil {
 		t.Errorf("Zero value Fetch() returned error: %v", err)
 	}
 
-	if data == nil {
-		t.Error("Zero value Fetch() returned nil")
+	// Zero value has nil Data, should return nil
+	if data != nil {
+		t.Error("Zero value Fetch() should return nil")
+	}
+}
+
+// TestMockProviderEmptyData tests with empty data
+func TestMockProviderEmptyData(t *testing.T) {
+	provider := NewMockProvider([]map[string]interface{}{})
+
+	ctx := context.Background()
+	data, err := provider.Fetch(ctx)
+
+	if err != nil {
+		t.Errorf("Fetch() with empty data returned error: %v", err)
 	}
 
-	// Should still return valid data
-	if len(data) != 2 {
-		t.Errorf("Zero value Fetch() returned %d records, expected 2", len(data))
+	if len(data) != 0 {
+		t.Errorf("Fetch() returned %d records, expected 0", len(data))
 	}
 }
 
 // BenchmarkMockProviderFetch benchmarks the Fetch operation
 func BenchmarkMockProviderFetch(b *testing.B) {
-	provider := NewMockProvider()
+	provider := NewMockProvider(testData)
+	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		provider.Fetch()
+		provider.Fetch(ctx)
 	}
 }
 
 // BenchmarkMockProviderFetchParallel benchmarks concurrent Fetch operations
 func BenchmarkMockProviderFetchParallel(b *testing.B) {
-	provider := NewMockProvider()
+	provider := NewMockProvider(testData)
+	ctx := context.Background()
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			provider.Fetch()
+			provider.Fetch(ctx)
 		}
 	})
 }
@@ -247,6 +290,6 @@ func BenchmarkMockProviderFetchParallel(b *testing.B) {
 func BenchmarkNewMockProvider(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewMockProvider()
+		NewMockProvider(testData)
 	}
 }

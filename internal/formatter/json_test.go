@@ -1,6 +1,7 @@
 package formatter
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -8,7 +9,7 @@ import (
 
 // TestNewJSONFormatter tests the factory function
 func TestNewJSONFormatter(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	if formatter == nil {
 		t.Fatal("NewJSONFormatter() returned nil")
@@ -20,14 +21,15 @@ func TestNewJSONFormatter(t *testing.T) {
 
 // TestJSONFormatterFormat tests basic formatting
 func TestJSONFormatterFormat(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{"id": 1, "name": "Alice", "score": 95},
 		{"id": 2, "name": "Bob", "score": 88},
 	}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Format() returned error: %v", err)
@@ -55,11 +57,12 @@ func TestJSONFormatterFormat(t *testing.T) {
 
 // TestJSONFormatterFormatEmpty tests formatting empty data
 func TestJSONFormatterFormatEmpty(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Format() returned error: %v", err)
@@ -78,13 +81,14 @@ func TestJSONFormatterFormatEmpty(t *testing.T) {
 
 // TestJSONFormatterFormatSingleRecord tests single record
 func TestJSONFormatterFormatSingleRecord(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{"id": 1, "name": "Alice"},
 	}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Format() returned error: %v", err)
@@ -106,7 +110,7 @@ func TestJSONFormatterFormatSingleRecord(t *testing.T) {
 
 // TestJSONFormatterFormatDataTypes tests various data types
 func TestJSONFormatterFormatDataTypes(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{
@@ -120,7 +124,8 @@ func TestJSONFormatterFormatDataTypes(t *testing.T) {
 		},
 	}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Format() returned error: %v", err)
@@ -175,13 +180,14 @@ func TestJSONFormatterFormatDataTypes(t *testing.T) {
 
 // TestJSONFormatterFormatIndentation tests pretty-printing
 func TestJSONFormatterFormatIndentation(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{"id": 1, "name": "Alice"},
 	}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Format() returned error: %v", err)
@@ -201,7 +207,7 @@ func TestJSONFormatterFormatIndentation(t *testing.T) {
 
 // TestJSONFormatterFormatSpecialCharacters tests special character handling
 func TestJSONFormatterFormatSpecialCharacters(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{
@@ -213,7 +219,8 @@ func TestJSONFormatterFormatSpecialCharacters(t *testing.T) {
 		},
 	}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Format() returned error: %v", err)
@@ -238,9 +245,10 @@ func TestJSONFormatterFormatSpecialCharacters(t *testing.T) {
 
 // TestJSONFormatterFormatNil tests nil data handling
 func TestJSONFormatterFormatNil(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
-	result, err := formatter.Format(nil)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, nil)
 
 	if err != nil {
 		t.Fatalf("Format(nil) returned error: %v", err)
@@ -255,7 +263,7 @@ func TestJSONFormatterFormatNil(t *testing.T) {
 
 // TestJSONFormatterFormatLargeDataset tests with large dataset
 func TestJSONFormatterFormatLargeDataset(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	// Create large dataset
 	const recordCount = 1000
@@ -268,7 +276,8 @@ func TestJSONFormatterFormatLargeDataset(t *testing.T) {
 		}
 	}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Format() failed on large dataset: %v", err)
@@ -286,7 +295,7 @@ func TestJSONFormatterFormatLargeDataset(t *testing.T) {
 
 // TestJSONFormatterFormatNestedStructures tests deeply nested data
 func TestJSONFormatterFormatNestedStructures(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{
@@ -302,7 +311,8 @@ func TestJSONFormatterFormatNestedStructures(t *testing.T) {
 		},
 	}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Format() returned error: %v", err)
@@ -325,6 +335,24 @@ func TestJSONFormatterFormatNestedStructures(t *testing.T) {
 	}
 }
 
+// TestJSONFormatterContextCancellation tests context cancellation
+func TestJSONFormatterContextCancellation(t *testing.T) {
+	formatter := NewJSONFormatter("  ")
+
+	testData := []map[string]interface{}{
+		{"id": 1, "name": "test"},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	_, err := formatter.Format(ctx, testData)
+
+	if err != context.Canceled {
+		t.Errorf("Expected context.Canceled, got: %v", err)
+	}
+}
+
 // TestJSONFormatterImplementsInterface verifies interface implementation
 func TestJSONFormatterImplementsInterface(t *testing.T) {
 	var _ FormatStrategy = (*JSONFormatter)(nil)
@@ -338,7 +366,8 @@ func TestJSONFormatterZeroValue(t *testing.T) {
 		{"id": 1, "name": "test"},
 	}
 
-	result, err := formatter.Format(testData)
+	ctx := context.Background()
+	result, err := formatter.Format(ctx, testData)
 
 	if err != nil {
 		t.Errorf("Zero value Format() returned error: %v", err)
@@ -357,7 +386,7 @@ func TestJSONFormatterZeroValue(t *testing.T) {
 
 // TestJSONFormatterConcurrentAccess tests concurrent formatting
 func TestJSONFormatterConcurrentAccess(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{"id": 1, "name": "test"},
@@ -367,9 +396,11 @@ func TestJSONFormatterConcurrentAccess(t *testing.T) {
 	errors := make(chan error, goroutines)
 	results := make(chan []byte, goroutines)
 
+	ctx := context.Background()
+
 	for i := 0; i < goroutines; i++ {
 		go func() {
-			result, err := formatter.Format(testData)
+			result, err := formatter.Format(ctx, testData)
 			if err != nil {
 				errors <- err
 				return
@@ -392,18 +423,19 @@ func TestJSONFormatterConcurrentAccess(t *testing.T) {
 
 // TestJSONFormatterOutputConsistency tests that multiple calls produce same output
 func TestJSONFormatterOutputConsistency(t *testing.T) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{"id": 1, "name": "Alice", "score": 95},
 	}
 
-	result1, err1 := formatter.Format(testData)
+	ctx := context.Background()
+	result1, err1 := formatter.Format(ctx, testData)
 	if err1 != nil {
 		t.Fatalf("First Format() failed: %v", err1)
 	}
 
-	result2, err2 := formatter.Format(testData)
+	result2, err2 := formatter.Format(ctx, testData)
 	if err2 != nil {
 		t.Fatalf("Second Format() failed: %v", err2)
 	}
@@ -416,22 +448,24 @@ func TestJSONFormatterOutputConsistency(t *testing.T) {
 
 // BenchmarkJSONFormatterFormat benchmarks basic formatting
 func BenchmarkJSONFormatterFormat(b *testing.B) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{"id": 1, "name": "Alice", "score": 95},
 		{"id": 2, "name": "Bob", "score": 88},
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		formatter.Format(testData)
+		formatter.Format(ctx, testData)
 	}
 }
 
 // BenchmarkJSONFormatterFormatLarge benchmarks large dataset
 func BenchmarkJSONFormatterFormatLarge(b *testing.B) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := make([]map[string]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
@@ -442,15 +476,17 @@ func BenchmarkJSONFormatterFormatLarge(b *testing.B) {
 		}
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		formatter.Format(testData)
+		formatter.Format(ctx, testData)
 	}
 }
 
 // BenchmarkJSONFormatterFormatNested benchmarks nested structures
 func BenchmarkJSONFormatterFormatNested(b *testing.B) {
-	formatter := NewJSONFormatter()
+	formatter := NewJSONFormatter("  ")
 
 	testData := []map[string]interface{}{
 		{
@@ -465,9 +501,11 @@ func BenchmarkJSONFormatterFormatNested(b *testing.B) {
 		},
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		formatter.Format(testData)
+		formatter.Format(ctx, testData)
 	}
 }
 
@@ -475,6 +513,6 @@ func BenchmarkJSONFormatterFormatNested(b *testing.B) {
 func BenchmarkNewJSONFormatter(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewJSONFormatter()
+		NewJSONFormatter("  ")
 	}
 }

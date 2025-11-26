@@ -1,82 +1,67 @@
-// Package processor implements the Chain of Responsibility pattern for data processing.
 package processor
 
-import (
-	"context"
-	"time"
+import "context"
 
-	"github.com/AshishBagdane/report-engine/internal/logging"
-)
-
-// BaseProcessor provides the chain traversal logic using the Template Method pattern.
-// Concrete processors can embed this to get automatic chain handling.
+// BaseProcessor is a basic processor that passes data through unchanged.
+// It serves as:
+//   - A pass-through processor when no transformation is needed
+//   - A base struct for embedding in custom processors
+//   - The end of a processor chain (if next is nil)
+//
+// BaseProcessor properly handles context cancellation and propagates
+// it through the chain.
+//
+// Thread-safe: Yes. BaseProcessor operations are thread-safe as long
+// as SetNext is not called concurrently with Process.
 type BaseProcessor struct {
-	next   ProcessorHandler
-	logger *logging.Logger
+	// next is the next processor in the chain
+	next ProcessorHandler
 }
 
 // SetNext sets the next processor in the chain.
-func (b *BaseProcessor) SetNext(handler ProcessorHandler) {
-	b.next = handler
+// This should typically be called during chain construction,
+// not during processing.
+//
+// Not safe for concurrent calls with Process. Chain construction
+// should be completed before processing begins.
+//
+// Parameters:
+//   - next: The next processor to call after this one
+func (b *BaseProcessor) SetNext(next ProcessorHandler) {
+	b.next = next
 }
 
-// WithLogger sets a custom logger for the processor.
-func (b *BaseProcessor) WithLogger(logger *logging.Logger) *BaseProcessor {
-	b.logger = logger
-	return b
-}
-
-// getLogger returns the processor's logger, creating a default one if needed.
-func (b *BaseProcessor) getLogger() *logging.Logger {
-	if b.logger == nil {
-		b.logger = logging.NewLogger(logging.Config{
-			Level:     logging.LevelInfo,
-			Format:    logging.FormatJSON,
-			Component: "processor.base",
-		})
+// Process passes data through to the next processor in the chain.
+// If there is no next processor, it returns the data unchanged.
+//
+// Context handling:
+//   - Checks context cancellation before proceeding
+//   - Propagates context to next processor
+//   - Returns ctx.Err() if context is canceled
+//
+// Parameters:
+//   - ctx: Context for cancellation and timeout control
+//   - data: Input data to process
+//
+// Returns:
+//   - []map[string]interface{}: Unmodified data (or result from next processor)
+//   - error: ctx.Err() if context is canceled, or error from next processor
+func (b *BaseProcessor) Process(ctx context.Context, data []map[string]interface{}) ([]map[string]interface{}, error) {
+	// Check if context is canceled before processing
+	// This provides a fast path for cancellation
+	select {
+	case <-ctx.Done():
+		// Context was canceled or deadline exceeded
+		return nil, ctx.Err()
+	default:
+		// Context is still valid, proceed
 	}
-	return b.logger
-}
 
-// Process passes data to the next processor if one exists, otherwise returns data as-is.
-// This implements the Template Method pattern for chain traversal.
-func (b *BaseProcessor) Process(data []map[string]interface{}) ([]map[string]interface{}, error) {
-	logger := b.getLogger()
-	ctx := context.Background()
-
+	// If there's a next processor, pass data through with context
 	if b.next != nil {
-		startTime := time.Now()
-		inputCount := len(data)
-
-		logger.DebugContext(ctx, "passing to next processor",
-			"input_records", inputCount,
-		)
-
-		result, err := b.next.Process(data)
-		duration := time.Since(startTime)
-
-		if err != nil {
-			logger.ErrorContext(ctx, "next processor failed",
-				"error", err,
-				"input_records", inputCount,
-				"duration_ms", duration.Milliseconds(),
-			)
-			return nil, err
-		}
-
-		outputCount := len(result)
-		logger.DebugContext(ctx, "next processor completed",
-			"input_records", inputCount,
-			"output_records", outputCount,
-			"duration_ms", duration.Milliseconds(),
-		)
-
-		return result, nil
+		return b.next.Process(ctx, data)
 	}
 
-	logger.DebugContext(ctx, "end of chain reached",
-		"record_count", len(data),
-	)
-
+	// End of chain - return data unchanged
 	return data, nil
 }

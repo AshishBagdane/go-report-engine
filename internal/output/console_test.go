@@ -2,6 +2,7 @@ package output
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"strings"
@@ -54,8 +55,9 @@ func TestConsoleOutputSend(t *testing.T) {
 	output := NewConsoleOutput()
 	testData := []byte("test output")
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(testData)
+		output.Send(ctx, testData)
 	})
 
 	expectedOutput := "test output\n"
@@ -69,8 +71,9 @@ func TestConsoleOutputSendEmpty(t *testing.T) {
 	output := NewConsoleOutput()
 	testData := []byte("")
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(testData)
+		output.Send(ctx, testData)
 	})
 
 	expectedOutput := "\n"
@@ -83,8 +86,9 @@ func TestConsoleOutputSendEmpty(t *testing.T) {
 func TestConsoleOutputSendNil(t *testing.T) {
 	output := NewConsoleOutput()
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(nil)
+		output.Send(ctx, nil)
 	})
 
 	expectedOutput := "\n"
@@ -98,8 +102,9 @@ func TestConsoleOutputSendJSON(t *testing.T) {
 	output := NewConsoleOutput()
 	jsonData := []byte(`{"id":1,"name":"Alice","score":95}`)
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(jsonData)
+		output.Send(ctx, jsonData)
 	})
 
 	if !strings.Contains(captured, `"id":1`) {
@@ -112,8 +117,9 @@ func TestConsoleOutputSendMultiline(t *testing.T) {
 	output := NewConsoleOutput()
 	multilineData := []byte("line1\nline2\nline3")
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(multilineData)
+		output.Send(ctx, multilineData)
 	})
 
 	if !strings.Contains(captured, "line1") || !strings.Contains(captured, "line2") {
@@ -128,8 +134,9 @@ func TestConsoleOutputSendLargeData(t *testing.T) {
 	// Create large data (100KB instead of 1MB for faster tests)
 	largeData := bytes.Repeat([]byte("x"), 100*1024)
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(largeData)
+		output.Send(ctx, largeData)
 	})
 
 	// Verify size (should be original + newline)
@@ -144,8 +151,9 @@ func TestConsoleOutputSendSpecialCharacters(t *testing.T) {
 	output := NewConsoleOutput()
 	specialData := []byte("Hello\tWorld\r\n")
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(specialData)
+		output.Send(ctx, specialData)
 	})
 
 	if !strings.Contains(captured, "Hello") || !strings.Contains(captured, "World") {
@@ -158,8 +166,9 @@ func TestConsoleOutputSendUnicode(t *testing.T) {
 	output := NewConsoleOutput()
 	unicodeData := []byte("Hello, 世界! 🎉")
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(unicodeData)
+		output.Send(ctx, unicodeData)
 	})
 
 	if !strings.Contains(captured, "世界") || !strings.Contains(captured, "🎉") {
@@ -177,9 +186,10 @@ func TestConsoleOutputMultipleSends(t *testing.T) {
 		[]byte("third"),
 	}
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
 		for _, data := range sends {
-			output.Send(data)
+			output.Send(ctx, data)
 		}
 	})
 
@@ -188,6 +198,21 @@ func TestConsoleOutputMultipleSends(t *testing.T) {
 		if !strings.Contains(captured, string(data)) {
 			t.Errorf("Output missing %q", string(data))
 		}
+	}
+}
+
+// TestConsoleOutputContextCancellation tests context cancellation
+func TestConsoleOutputContextCancellation(t *testing.T) {
+	output := NewConsoleOutput()
+	testData := []byte("test")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	err := output.Send(ctx, testData)
+
+	if err != context.Canceled {
+		t.Errorf("Expected context.Canceled, got: %v", err)
 	}
 }
 
@@ -201,8 +226,9 @@ func TestConsoleOutputZeroValue(t *testing.T) {
 	var output ConsoleOutput
 	testData := []byte("test")
 
+	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(testData)
+		output.Send(ctx, testData)
 	})
 
 	if !strings.Contains(captured, "test") {
@@ -222,23 +248,37 @@ func TestConsoleOutputConcurrentSends(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(goroutines)
 
-	// Suppress output for this test to avoid clutter
+	// Redirect stdout to discard instead of nil
 	old := os.Stdout
-	os.Stdout = nil
+	devNull, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+	if err != nil {
+		t.Fatalf("Failed to open /dev/null: %v", err)
+	}
+	defer devNull.Close()
+	os.Stdout = devNull
+
+	ctx := context.Background()
+	errors := make(chan error, goroutines)
 
 	for i := 0; i < goroutines; i++ {
 		go func(id int) {
 			defer wg.Done()
 			data := []byte(strings.Repeat("x", 100))
-			err := output.Send(data)
+			err := output.Send(ctx, data)
 			if err != nil {
-				t.Errorf("Concurrent Send() failed: %v", err)
+				errors <- err
 			}
 		}(i)
 	}
 
 	wg.Wait()
 	os.Stdout = old
+	close(errors)
+
+	// Check for errors
+	for err := range errors {
+		t.Errorf("Concurrent Send() failed: %v", err)
+	}
 }
 
 // BenchmarkConsoleOutputSend benchmarks basic send
@@ -246,13 +286,20 @@ func BenchmarkConsoleOutputSend(b *testing.B) {
 	output := NewConsoleOutput()
 	testData := []byte("benchmark test data")
 
-	// Suppress output for benchmark
+	// Redirect stdout to discard
 	old := os.Stdout
-	os.Stdout = nil
+	devNull, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+	if err != nil {
+		b.Fatalf("Failed to open /dev/null: %v", err)
+	}
+	defer devNull.Close()
+	os.Stdout = devNull
+
+	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		output.Send(testData)
+		output.Send(ctx, testData)
 	}
 
 	os.Stdout = old
@@ -263,13 +310,20 @@ func BenchmarkConsoleOutputSendLarge(b *testing.B) {
 	output := NewConsoleOutput()
 	testData := bytes.Repeat([]byte("x"), 10000)
 
-	// Suppress output for benchmark
+	// Redirect stdout to discard
 	old := os.Stdout
-	os.Stdout = nil
+	devNull, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+	if err != nil {
+		b.Fatalf("Failed to open /dev/null: %v", err)
+	}
+	defer devNull.Close()
+	os.Stdout = devNull
+
+	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		output.Send(testData)
+		output.Send(ctx, testData)
 	}
 
 	os.Stdout = old

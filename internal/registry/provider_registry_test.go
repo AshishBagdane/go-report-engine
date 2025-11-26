@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"sync"
 	"testing"
 
@@ -12,7 +13,7 @@ type mockProvider struct {
 	name string
 }
 
-func (m *mockProvider) Fetch() ([]map[string]interface{}, error) {
+func (m *mockProvider) Fetch(ctx context.Context) ([]map[string]interface{}, error) {
 	// Simulate data fetching behavior
 	return []map[string]interface{}{
 		{"id": 1, "name": m.name},

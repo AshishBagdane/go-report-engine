@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -47,9 +48,24 @@ func (f *MinScoreFilter) Configure(params map[string]string) error {
 // init registers all available core components and the sample user component.
 func init() {
 	// Core Registrations
-	registry.RegisterProvider("mock", provider.NewMockProvider)
-	registry.RegisterFormatter("json", formatter.NewJSONFormatter)
-	registry.RegisterOutput("console", output.NewConsoleOutput)
+	// Provider requires data parameter
+	registry.RegisterProvider("mock", func() provider.ProviderStrategy {
+		return provider.NewMockProvider([]map[string]interface{}{
+			{"id": 1, "name": "Alice", "score": 95},
+			{"id": 2, "name": "Bob", "score": 88},
+			{"id": 3, "name": "Charlie", "score": 92},
+		})
+	})
+
+	// Formatter requires indent parameter
+	registry.RegisterFormatter("json", func() formatter.FormatStrategy {
+		return formatter.NewJSONFormatter("  ")
+	})
+
+	// Output needs to return OutputStrategy interface
+	registry.RegisterOutput("console", func() output.OutputStrategy {
+		return output.NewConsoleOutput()
+	})
 
 	// User Logic Registration (Uses the new type-safe helper function)
 	registry.RegisterFilter("min_score_filter", &MinScoreFilter{})
@@ -57,7 +73,7 @@ func init() {
 
 func main() {
 	// 1. Simulate loading config from file (e.g., config.yaml)
-	appConfig := engine.Config{ //
+	appConfig := engine.Config{
 		Provider: engine.ProviderConfig{Type: "mock"},
 		Processors: []engine.ProcessorConfig{
 			{
@@ -77,8 +93,9 @@ func main() {
 		log.Fatalf("Failed to initialize engine: %v", err)
 	}
 
-	// 3. Run
-	if err := re.Run(); err != nil {
+	// 3. Run with context
+	ctx := context.Background()
+	if err := re.RunWithContext(ctx); err != nil {
 		fmt.Println("Error during execution:", err)
 	}
 }

@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"sync"
 	"testing"
 
@@ -12,7 +13,7 @@ type mockOutput struct {
 	name string
 }
 
-func (m *mockOutput) Send(data []byte) error {
+func (m *mockOutput) Send(ctx context.Context, data []byte) error {
 	// Simulate output behavior
 	return nil
 }

@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -110,7 +111,8 @@ func TestFilterWrapperProcess(t *testing.T) {
 		{"id": 4, "value": 70},
 	}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() returned error: %v", err)
@@ -138,7 +140,8 @@ func TestFilterWrapperProcessEmpty(t *testing.T) {
 		{"id": 2, "value": 20},
 	}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() returned error: %v", err)
@@ -162,7 +165,8 @@ func TestFilterWrapperProcessWithNext(t *testing.T) {
 		{"id": 2, "value": 40},
 	}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() with next failed: %v", err)
@@ -237,7 +241,8 @@ func TestValidatorWrapperProcessSuccess(t *testing.T) {
 		{"id": 2, "required_field": "value2"},
 	}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() returned error: %v", err)
@@ -258,7 +263,8 @@ func TestValidatorWrapperProcessFailure(t *testing.T) {
 		{"id": 3, "required_field": "value3"},
 	}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err == nil {
 		t.Fatal("Process() should have returned error for invalid data")
@@ -285,7 +291,8 @@ func TestValidatorWrapperProcessWithNext(t *testing.T) {
 		{"id": 1, "required_field": "value1"},
 	}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() with next failed: %v", err)
@@ -360,7 +367,8 @@ func TestTransformWrapperProcess(t *testing.T) {
 		{"id": 2, "name": "bob"},
 	}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() returned error: %v", err)
@@ -392,7 +400,8 @@ func TestTransformWrapperProcessEmpty(t *testing.T) {
 
 	testData := []map[string]interface{}{}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() returned error: %v", err)
@@ -414,7 +423,8 @@ func TestTransformWrapperProcessWithNext(t *testing.T) {
 		{"id": 1, "name": "test"},
 	}
 
-	result, err := wrapper.Process(testData)
+	ctx := context.Background()
+	result, err := wrapper.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Process() with next failed: %v", err)
@@ -465,6 +475,72 @@ func TestTransformWrapperConfigure(t *testing.T) {
 	}
 }
 
+// --- Context Tests ---
+
+func TestFilterWrapperContextCancellation(t *testing.T) {
+	strategy := &mockFilter{threshold: 0} // Keep all records
+	wrapper := NewFilterWrapper(strategy)
+
+	// Create large dataset
+	testData := make([]map[string]interface{}, 1000)
+	for i := 0; i < 1000; i++ {
+		testData[i] = map[string]interface{}{"id": i, "value": i}
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	result, err := wrapper.Process(ctx, testData)
+
+	if err != context.Canceled {
+		t.Errorf("Expected context.Canceled, got: %v", err)
+	}
+
+	// May have partial results
+	_ = result
+}
+
+func TestValidatorWrapperContextCancellation(t *testing.T) {
+	strategy := &mockValidator{}
+	wrapper := NewValidatorWrapper(strategy)
+
+	testData := []map[string]interface{}{
+		{"id": 1, "required_field": "value1"},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	_, err := wrapper.Process(ctx, testData)
+
+	if err != context.Canceled {
+		t.Errorf("Expected context.Canceled, got: %v", err)
+	}
+}
+
+func TestTransformWrapperContextCancellation(t *testing.T) {
+	strategy := &mockTransformer{}
+	wrapper := NewTransformWrapper(strategy)
+
+	// Create large dataset
+	testData := make([]map[string]interface{}, 1000)
+	for i := 0; i < 1000; i++ {
+		testData[i] = map[string]interface{}{"id": i, "name": "test"}
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	result, err := wrapper.Process(ctx, testData)
+
+	if err != context.Canceled {
+		t.Errorf("Expected context.Canceled, got: %v", err)
+	}
+
+	// May have partial results
+	_ = result
+}
+
 // --- Integration Tests ---
 
 func TestWrapperChaining(t *testing.T) {
@@ -482,7 +558,8 @@ func TestWrapperChaining(t *testing.T) {
 		{"id": 3, "value": 70, "required_field": "c", "name": "charlie"},
 	}
 
-	result, err := filter.Process(testData)
+	ctx := context.Background()
+	result, err := filter.Process(ctx, testData)
 
 	if err != nil {
 		t.Fatalf("Chained Process() failed: %v", err)
@@ -516,9 +593,11 @@ func BenchmarkFilterWrapperProcess(b *testing.B) {
 		{"id": 4, "value": 70},
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		wrapper.Process(testData)
+		wrapper.Process(ctx, testData)
 	}
 }
 
@@ -531,9 +610,11 @@ func BenchmarkValidatorWrapperProcess(b *testing.B) {
 		{"id": 2, "required_field": "value2"},
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		wrapper.Process(testData)
+		wrapper.Process(ctx, testData)
 	}
 }
 
@@ -546,9 +627,11 @@ func BenchmarkTransformWrapperProcess(b *testing.B) {
 		{"id": 2, "name": "bob"},
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		wrapper.Process(testData)
+		wrapper.Process(ctx, testData)
 	}
 }
 
@@ -565,8 +648,10 @@ func BenchmarkWrapperChaining(b *testing.B) {
 		{"id": 2, "value": 70, "required_field": "b", "name": "bob"},
 	}
 
+	ctx := context.Background()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		filter.Process(testData)
+		filter.Process(ctx, testData)
 	}
 }
