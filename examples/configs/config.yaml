@@ -1,0 +1,61 @@
+# Example Report Engine Configuration (YAML)
+# This file demonstrates all available configuration options.
+# Save as config.yaml and load with: config.LoadFromFile("config.yaml")
+
+# Provider configuration - defines the data source
+provider:
+  type: mock  # Type of provider: mock, postgres, mysql, csv, api, etc.
+  params:
+    # Provider-specific parameters (key-value pairs)
+    # For mock provider:
+    data: "sample"
+    # For postgres provider:
+    # host: "localhost"
+    # port: "5432"
+    # database: "mydb"
+    # user: "postgres"
+    # password: "secret"
+
+# Processing pipeline - chain of data transformations
+processors:
+  # First processor - filter records
+  - type: filter
+    params:
+      condition: "score > 80"
+      min_score: "80"
+  
+  # Second processor - validate data
+  - type: validator
+    params:
+      required_fields: "id,name,email"
+      check_duplicates: "true"
+  
+  # Third processor - transform data
+  - type: transformer
+    params:
+      format: "uppercase"
+      normalize: "true"
+
+# Formatter configuration - defines output format
+formatter:
+  type: json  # Type of formatter: json, csv, yaml, xml, html, etc.
+  params:
+    # Formatter-specific parameters
+    indent: "2"        # JSON indentation
+    pretty: "true"     # Enable pretty printing
+    # For CSV formatter:
+    # delimiter: ","
+    # include_header: "true"
+
+# Output configuration - defines delivery method
+output:
+  type: console  # Type of output: console, file, s3, api, email, slack, etc.
+  params:
+    # Output-specific parameters
+    # For file output:
+    # path: "/tmp/report.json"
+    # mode: "0644"
+    # For S3 output:
+    # bucket: "my-reports"
+    # key: "report.json"
+    # region: "us-east-1"

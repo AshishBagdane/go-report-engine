@@ -1,0 +1,13 @@
+# Minimal Report Engine Configuration
+# This is the simplest valid configuration
+
+provider:
+  type: mock
+
+processors: []
+
+formatter:
+  type: json
+
+output:
+  type: console

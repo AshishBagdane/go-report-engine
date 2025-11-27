@@ -1,0 +1,42 @@
+{
+  "provider": {
+    "type": "mock",
+    "params": {
+      "data": "sample"
+    }
+  },
+  "processors": [
+    {
+      "type": "filter",
+      "params": {
+        "condition": "score > 80",
+        "min_score": "80"
+      }
+    },
+    {
+      "type": "validator",
+      "params": {
+        "required_fields": "id,name,email",
+        "check_duplicates": "true"
+      }
+    },
+    {
+      "type": "transformer",
+      "params": {
+        "format": "uppercase",
+        "normalize": "true"
+      }
+    }
+  ],
+  "formatter": {
+    "type": "json",
+    "params": {
+      "indent": "2",
+      "pretty": "true"
+    }
+  },
+  "output": {
+    "type": "console",
+    "params": {}
+  }
+}
