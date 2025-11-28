@@ -27,6 +27,50 @@ import "context"
 //
 // Thread-safety: Processors may be called concurrently if used in
 // multiple engine instances. Stateful processors must be thread-safe.
+//
+// Resource Cleanup (Optional):
+// Processors that manage resources (file buffers, network connections,
+// caches, background goroutines, etc.) SHOULD implement one of the cleanup
+// interfaces from pkg/api:
+//   - api.Closeable - for simple cleanup
+//   - api.CloseableWithContext - for context-aware cleanup with timeout support
+//
+// The engine will automatically detect and call cleanup methods via type assertion.
+// Stateless processors don't need to implement cleanup.
+//
+// For processor chains, cleanup will be called on the head processor, which
+// should propagate cleanup through the chain if needed.
+//
+// Example processor with cleanup:
+//
+//	type CachingProcessor struct {
+//	    BaseProcessor
+//	    cache     *Cache
+//	    closeOnce sync.Once
+//	    closeErr  error
+//	}
+//
+//	func (c *CachingProcessor) Process(ctx context.Context, data []map[string]interface{}) ([]map[string]interface{}, error) {
+//	    // Process with cache
+//	    return c.BaseProcessor.Process(ctx, data)
+//	}
+//
+//	func (c *CachingProcessor) Close() error {
+//	    c.closeOnce.Do(func() {
+//	        if c.cache != nil {
+//	            c.closeErr = c.cache.Close()
+//	        }
+//	        // Propagate to next processor if it supports cleanup
+//	        if c.next != nil {
+//	            if closer, ok := c.next.(io.Closer); ok {
+//	                if err := closer.Close(); err != nil && c.closeErr == nil {
+//	                    c.closeErr = err
+//	                }
+//	            }
+//	        }
+//	    })
+//	    return c.closeErr
+//	}
 type ProcessorHandler interface {
 	// SetNext sets the next processor in the chain.
 	// This allows for runtime chain construction.

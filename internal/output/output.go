@@ -21,6 +21,48 @@ import "context"
 //
 // Thread-safety: Outputs may be called concurrently if used in
 // multiple engine instances. Implementations must be thread-safe if shared.
+//
+// Resource Cleanup (Optional):
+// Outputs that manage resources (file handles, network connections, HTTP clients,
+// database connections, message queues, cloud service clients, etc.) SHOULD
+// implement one of the cleanup interfaces from pkg/api:
+//   - api.Closeable - for simple cleanup
+//   - api.CloseableWithContext - for context-aware cleanup with timeout support
+//
+// The engine will automatically detect and call cleanup methods via type assertion.
+// Simple outputs that don't maintain persistent resources (like ConsoleOutput)
+// don't need to implement cleanup.
+//
+// Example output with cleanup:
+//
+//	type FileOutput struct {
+//	    file      *os.File
+//	    writer    *bufio.Writer
+//	    closeOnce sync.Once
+//	    closeErr  error
+//	}
+//
+//	func (f *FileOutput) Send(ctx context.Context, data []byte) error {
+//	    select {
+//	    case <-ctx.Done():
+//	        return ctx.Err()
+//	    default:
+//	    }
+//	    _, err := f.writer.Write(data)
+//	    return err
+//	}
+//
+//	func (f *FileOutput) Close() error {
+//	    f.closeOnce.Do(func() {
+//	        if f.writer != nil {
+//	            f.writer.Flush()
+//	        }
+//	        if f.file != nil {
+//	            f.closeErr = f.file.Close()
+//	        }
+//	    })
+//	    return f.closeErr
+//	}
 type OutputStrategy interface {
 	// Send delivers the formatted data to its destination.
 	// The context allows for cancellation and timeout control.
