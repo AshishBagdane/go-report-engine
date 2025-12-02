@@ -1,0 +1,64 @@
+# Parallel Processing Configuration Example
+# This demonstrates how to configure parallel processing in the report engine
+
+# Provider configuration
+provider:
+  type: mock
+  params:
+    data: "large_dataset"
+
+# Processing pipeline with parallel processors
+processors:
+  # Regular sequential filter (for comparison)
+  - type: filter
+    params:
+      min_value: "10"
+  
+  # Parallel filter with custom configuration
+  # This will process data concurrently using multiple workers
+  - type: parallel_filter
+    params:
+      # Parallel processing parameters
+      workers: "8"           # Number of concurrent workers (default: runtime.NumCPU())
+      chunk_size: "500"      # Records per chunk (default: auto-calculated)
+      min_chunk_size: "100"  # Minimum chunk size (default: 100)
+      
+      # Filter-specific parameters
+      threshold: "50"
+      complex_logic: "true"
+  
+  # Parallel validator
+  # Useful for CPU-intensive validation logic
+  - type: parallel_validator
+    params:
+      workers: "4"
+      chunk_size: "1000"
+      
+      # Validator-specific parameters
+      strict: "true"
+      check_format: "true"
+  
+  # Parallel transformer with high worker count
+  # Good for data enrichment or expensive transformations
+  - type: parallel_transformer
+    params:
+      workers: "16"          # More workers for CPU-bound tasks
+      chunk_size: "200"
+      min_chunk_size: "50"
+      
+      # Transformer-specific parameters
+      format: "uppercase"
+      enrich_data: "true"
+
+# Formatter configuration
+formatter:
+  type: json
+  params:
+    indent: "2"
+    pretty: "true"
+
+# Output configuration
+output:
+  type: console
+  params:
+    # No additional params needed for console output
