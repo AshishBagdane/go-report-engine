@@ -12,6 +12,7 @@ import (
 	"github.com/AshishBagdane/report-engine/internal/errors"
 	"github.com/AshishBagdane/report-engine/internal/formatter"
 	"github.com/AshishBagdane/report-engine/internal/logging"
+	"github.com/AshishBagdane/report-engine/internal/memory"
 	"github.com/AshishBagdane/report-engine/internal/output"
 	"github.com/AshishBagdane/report-engine/internal/processor"
 	"github.com/AshishBagdane/report-engine/internal/provider"
@@ -40,6 +41,23 @@ type ReportEngine struct {
 
 	// logger provides structured logging for the engine
 	logger *logging.Logger
+
+	// ChunkSize is the number of records to process in each batch during streaming.
+	// Default: 1000
+	ChunkSize int
+}
+
+// WithChunkSize sets the chunk size for streaming operations.
+func (r *ReportEngine) WithChunkSize(size int) *ReportEngine {
+	r.ChunkSize = size
+	return r
+}
+
+func (r *ReportEngine) getChunkSize() int {
+	if r.ChunkSize <= 0 {
+		return 1000
+	}
+	return r.ChunkSize
 }
 
 // WithLogger sets a custom logger for the engine.
@@ -132,6 +150,18 @@ func (r *ReportEngine) RunWithContext(ctx context.Context) error {
 	}
 
 	logger.DebugContext(ctx, "engine validation passed")
+
+	// Check for streaming support
+	streamingProvider, okProvider := r.Provider.(provider.StreamingProviderStrategy)
+	streamingFormatter, okFormatter := r.Formatter.(formatter.StreamingFormatterStrategy)
+	streamingOutput, okOutput := r.Output.(output.StreamingOutputStrategy)
+
+	if okProvider && okFormatter && okOutput {
+		logger.InfoContext(ctx, "executing streaming pipeline")
+		return r.runStreamingPipeline(ctx, streamingProvider, streamingFormatter, streamingOutput)
+	}
+
+	logger.InfoContext(ctx, "executing batch pipeline")
 
 	// Stage 1: Fetch data from provider
 	data, err := r.fetchDataWithContext(ctx)
@@ -467,4 +497,136 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// runStreamingPipeline executes the pipeline in streaming mode.
+func (r *ReportEngine) runStreamingPipeline(
+	ctx context.Context,
+	prov provider.StreamingProviderStrategy,
+	fmttr formatter.StreamingFormatterStrategy,
+	out output.StreamingOutputStrategy,
+) error {
+	logger := r.getLogger()
+	startTime := time.Now()
+
+	// Initialize output
+	if err := out.Initialize(ctx); err != nil {
+		logger.ErrorContext(ctx, "streaming: output initialization failed", "error", err)
+		return errors.NewErrorContext(errors.ComponentOutput, "initialize").Wrap(err)
+	}
+	defer func() {
+		if err := out.Close(ctx); err != nil {
+			logger.WarnContext(ctx, "streaming: output close failed", "error", err)
+		}
+	}()
+
+	// Start stream
+	iterator, err := prov.Stream(ctx)
+	if err != nil {
+		logger.ErrorContext(ctx, "streaming: provider stream failed", "error", err)
+		return errors.NewErrorContext(errors.ComponentProvider, "stream").Wrap(err)
+	}
+	defer func() {
+		if err := iterator.Close(); err != nil {
+			logger.WarnContext(ctx, "streaming: iterator close failed", "error", err)
+		}
+	}()
+
+	// Format Start
+	startBytes, err := fmttr.FormatStart(ctx)
+	if err != nil {
+		return errors.NewErrorContext(errors.ComponentFormatter, "format_start").Wrap(err)
+	}
+	if err := out.WriteChunk(ctx, startBytes); err != nil {
+		return errors.NewErrorContext(errors.ComponentOutput, "write_chunk").Wrap(err)
+	}
+
+	chunkSize := r.getChunkSize()
+	buffer := make([]map[string]interface{}, 0, chunkSize)
+	totalRecords := 0
+	isFirstChunk := true
+
+	// Iterate
+	for iterator.Next() {
+		buffer = append(buffer, iterator.Value())
+
+		if len(buffer) >= chunkSize {
+			if err := r.processAndWriteChunk(ctx, buffer, fmttr, out, &isFirstChunk); err != nil {
+				return err
+			}
+			totalRecords += len(buffer)
+			buffer = buffer[:0]
+		}
+	}
+	if err := iterator.Err(); err != nil {
+		logger.ErrorContext(ctx, "streaming: iterator error", "error", err)
+		return errors.NewErrorContext(errors.ComponentProvider, "iterate").Wrap(err)
+	}
+
+	// Process remaining
+	if len(buffer) > 0 {
+		if err := r.processAndWriteChunk(ctx, buffer, fmttr, out, &isFirstChunk); err != nil {
+			return err
+		}
+		totalRecords += len(buffer)
+	}
+
+	// Format End
+	endBytes, err := fmttr.FormatEnd(ctx)
+	if err != nil {
+		return errors.NewErrorContext(errors.ComponentFormatter, "format_end").Wrap(err)
+	}
+	if err := out.WriteChunk(ctx, endBytes); err != nil {
+		return errors.NewErrorContext(errors.ComponentOutput, "write_chunk").Wrap(err)
+	}
+
+	logger.InfoContext(ctx, "streaming pipeline completed",
+		"total_records", totalRecords,
+		"duration_ms", time.Since(startTime).Milliseconds(),
+	)
+	return nil
+}
+
+func (r *ReportEngine) processAndWriteChunk(
+	ctx context.Context,
+	chunk []map[string]interface{},
+	fmttr formatter.StreamingFormatterStrategy,
+	out output.StreamingOutputStrategy,
+	isFirstChunk *bool,
+) error {
+	// Release maps back to pool after processing
+	defer func() {
+		for _, m := range chunk {
+			memory.PutMap(m)
+		}
+	}()
+
+	// Process
+	processed, err := r.Processor.Process(ctx, chunk)
+	if err != nil {
+		return errors.NewErrorContext(errors.ComponentProcessor, "process_chunk").Wrap(err)
+	}
+	if len(processed) == 0 {
+		return nil
+	}
+
+	// Delimiter
+	if !*isFirstChunk {
+		if err := out.WriteChunk(ctx, []byte(",")); err != nil {
+			return errors.NewErrorContext(errors.ComponentOutput, "write_delimiter").Wrap(err)
+		}
+	}
+	*isFirstChunk = false
+
+	// Format
+	bytes, err := fmttr.FormatChunk(ctx, processed)
+	if err != nil {
+		return errors.NewErrorContext(errors.ComponentFormatter, "format_chunk").Wrap(err)
+	}
+
+	// Write
+	if err := out.WriteChunk(ctx, bytes); err != nil {
+		return errors.NewErrorContext(errors.ComponentOutput, "write_chunk").Wrap(err)
+	}
+	return nil
 }

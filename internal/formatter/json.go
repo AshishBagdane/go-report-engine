@@ -99,3 +99,48 @@ func (j *JSONFormatter) Format(ctx context.Context, data []map[string]interface{
 
 	return result, nil
 }
+
+// FormatStart returns the opening bytes for the stream.
+func (j *JSONFormatter) FormatStart(ctx context.Context) ([]byte, error) {
+	return []byte("["), nil
+}
+
+// FormatEnd returns the closing bytes for the stream.
+func (j *JSONFormatter) FormatEnd(ctx context.Context) ([]byte, error) {
+	return []byte("]"), nil
+}
+
+// FormatChunk formats a chunk of data by marshaling it and stripping the outer brackets.
+func (j *JSONFormatter) FormatChunk(ctx context.Context, data []map[string]interface{}) ([]byte, error) {
+	// Check context
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	if len(data) == 0 {
+		return []byte{}, nil
+	}
+
+	var bytes []byte
+	var err error
+
+	if j.Indent != "" {
+		bytes, err = json.MarshalIndent(data, "", j.Indent)
+	} else {
+		bytes, err = json.Marshal(data)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Strip outer brackets [ ... ]
+	// json.Marshal always produces [ ... ] for a slice
+	if len(bytes) >= 2 {
+		return bytes[1 : len(bytes)-1], nil
+	}
+
+	return bytes, nil
+}

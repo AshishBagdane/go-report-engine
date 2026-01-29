@@ -68,3 +68,32 @@ type ProviderStrategy interface {
 	// Implementations should return promptly when ctx.Done() is closed.
 	Fetch(ctx context.Context) ([]map[string]interface{}, error)
 }
+
+// Iterator defines the interface for iterating over data records one by one.
+// This enables memory-efficient processing of large datasets.
+type Iterator interface {
+	// Next advances the iterator to the next record.
+	// Returns true if a record is available, false if the stream is exhausted or an error occurred.
+	Next() bool
+
+	// Value returns the current record.
+	// Should only be called after a successful Next() call.
+	Value() map[string]interface{}
+
+	// Err returns any error that occurred during iteration.
+	// Should be checked after Next() returns false.
+	Err() error
+
+	// Close releases any resources associated with the iterator.
+	Close() error
+}
+
+// StreamingProviderStrategy extends ProviderStrategy to support streaming data access.
+// Providers that support streaming should implement this interface.
+type StreamingProviderStrategy interface {
+	ProviderStrategy
+
+	// Stream returns an Iterator for streaming data access.
+	// The context controls the lifetime of the stream initialization.
+	Stream(ctx context.Context) (Iterator, error)
+}

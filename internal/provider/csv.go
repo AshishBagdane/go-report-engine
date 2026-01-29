@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/AshishBagdane/report-engine/internal/memory"
 )
 
 // CSVProvider implements ProviderStrategy for reading CSV files.
@@ -137,5 +139,131 @@ func (p *CSVProvider) Configure(params map[string]string) error {
 		}
 	}
 
+	return nil
+}
+
+// Stream returns an Iterator for streaming data access.
+func (p *CSVProvider) Stream(ctx context.Context) (Iterator, error) {
+	if p.FilePath == "" {
+		return nil, fmt.Errorf("csv provider: file path not configured")
+	}
+
+	file, err := os.Open(p.FilePath)
+	if err != nil {
+		return nil, fmt.Errorf("csv provider: failed to open file: %w", err)
+	}
+
+	reader := csv.NewReader(file)
+	reader.Comma = p.Delimiter
+
+	var headers []string
+
+	// Read first record to determine headers
+	firstRecord, err := reader.Read()
+	if err == io.EOF {
+		// Empty file
+		_ = file.Close()
+		return &CSVIterator{
+			file:   nil, // Closed
+			err:    nil, // Empty stream
+			reader: nil,
+		}, nil
+	}
+	if err != nil {
+		_ = file.Close()
+		return nil, fmt.Errorf("csv provider: failed to read header/first row: %w", err)
+	}
+
+	if p.HasHeader {
+		headers = firstRecord
+	} else {
+		// Generate default headers
+		headers = make([]string, len(firstRecord))
+		for i := range headers {
+			headers[i] = fmt.Sprintf("col_%d", i+1)
+		}
+
+		// If NO header, we need to make sure the first record (which is data)
+		// is returned by the first call to Next().
+		// However, standard csv.Reader tracks position.
+		// If we consumed it, we can't un-read it easily without rewinding (seek).
+		// Since we cannot rely on Seek (might be a stream), we have a "pushback" problem.
+		//
+		// Solution: CSVIterator can have an optional `firstRecord` buffer.
+	}
+
+	it := &CSVIterator{
+		file:    file,
+		reader:  reader,
+		headers: headers,
+	}
+
+	if !p.HasHeader {
+		// Pre-populate the buffer with the already-read first record
+		it.nextRec = firstRecord
+		it.hasBuf = true
+	}
+
+	return it, nil
+}
+
+type CSVIterator struct {
+	file    *os.File
+	reader  *csv.Reader
+	headers []string
+	current map[string]interface{}
+	err     error
+
+	// For handling no-header case where we consumed the first row
+	nextRec []string
+	hasBuf  bool
+}
+
+func (it *CSVIterator) Next() bool {
+	if it.err != nil {
+		return false
+	}
+	if it.reader == nil { // Handle empty file case
+		return false
+	}
+
+	var record []string
+	var err error
+
+	if it.hasBuf {
+		record = it.nextRec
+		it.hasBuf = false
+	} else {
+		record, err = it.reader.Read()
+		if err == io.EOF {
+			return false
+		}
+		if err != nil {
+			it.err = err
+			return false
+		}
+	}
+
+	it.current = memory.GetMap()
+	for i, val := range record {
+		if i < len(it.headers) {
+			it.current[it.headers[i]] = val
+		}
+	}
+	return true
+}
+
+func (it *CSVIterator) Value() map[string]interface{} {
+	return it.current
+}
+
+func (it *CSVIterator) Err() error {
+	return it.err
+}
+
+func (it *CSVIterator) Close() error {
+	if it.file != nil {
+		return it.file.Close()
+	}
 	return nil
 }

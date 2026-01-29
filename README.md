@@ -587,7 +587,7 @@ See [`examples/README.md`](examples/README.md) for detailed examples documentati
 - ✅ **Concurrent processing in chains**
 - ✅ **Worker pools for bounded concurrency**
 - [ ] Memory pooling for efficiency
-- [ ] Streaming for large datasets
+- ✅ **Streaming for large datasets**
 - [ ] Performance benchmarks and profiling
 
 ### **Phase 5 - Enterprise** (In Progress)

@@ -81,6 +81,21 @@ type FormatStrategy interface {
 	//     - context.DeadlineExceeded if ctx deadline exceeded
 	//     - Serialization errors specific to the format
 	//
-	// Implementations should return promptly when ctx.Done() is closed.
+	// Format converts data into the formatter's output format.
+	// The context allows for cancellation and timeout control.
 	Format(ctx context.Context, data []map[string]interface{}) ([]byte, error)
+}
+
+// StreamingFormatterStrategy extends FormatStrategy for streaming support.
+type StreamingFormatterStrategy interface {
+	FormatStrategy
+
+	// FormatStart returns the opening bytes for the stream (e.g. "[" for JSON).
+	FormatStart(ctx context.Context) ([]byte, error)
+
+	// FormatChunk formats a chunk of data.
+	FormatChunk(ctx context.Context, data []map[string]interface{}) ([]byte, error)
+
+	// FormatEnd returns the closing bytes for the stream (e.g. "]" for JSON).
+	FormatEnd(ctx context.Context) ([]byte, error)
 }

@@ -88,6 +88,21 @@ type OutputStrategy interface {
 	//     - context.DeadlineExceeded if ctx deadline exceeded
 	//     - I/O errors specific to the output destination
 	//
-	// Implementations should return promptly when ctx.Done() is closed.
+	// Send delivers the formatted data to its destination.
+	// The context allows for cancellation and timeout control.
 	Send(ctx context.Context, data []byte) error
+}
+
+// StreamingOutputStrategy extends OutputStrategy for streaming support.
+type StreamingOutputStrategy interface {
+	OutputStrategy
+
+	// Initialize prepares the output for streaming (e.g., opening a file).
+	Initialize(ctx context.Context) error
+
+	// WriteChunk writes a chunk of data to the output.
+	WriteChunk(ctx context.Context, data []byte) error
+
+	// Close finalizes the output stream (e.g., closing a file).
+	Close(ctx context.Context) error
 }
