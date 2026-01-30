@@ -814,10 +814,10 @@ Join the #buildinpublic journey! 🎉
 - [API Documentation](https://pkg.go.dev/github.com/AshishBagdane/go-report-engine)
 - [Examples Documentation](./examples/README.md)
 - [Configuration Guide](./examples/configs/README.md)
-- [Architecture Guide](./docs/ARCHITECTURE.md) (Coming soon)
-- [Error Handling Guide](./docs/ERROR_HANDLING.md) (Coming soon)
-- [Testing Guide](./docs/TESTING.md) (Coming soon)
-- [Contributing Guide](./CONTRIBUTING.md) (Coming soon)
+- [Architecture Guide](./docs/ARCHITECTURE.md)
+- [Integration Reference](./docs/INTEGRATION_REFERENCE.md)
+- [Contributing Guide](./CONTRIBUTING.md)
+
 
 ---
 
