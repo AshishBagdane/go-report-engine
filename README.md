@@ -7,6 +7,7 @@ Built using **Strategy**, **Factory**, **Builder**, **Template Method**, and **C
 **Fetch → Process → Format → Output — fully customizable.**
 
 [![Go Version](https://img.shields.io/badge/Go-1.24.3-00ADD8?style=flat&logo=go)](https://go.dev)
+[![Build Status](https://github.com/AshishBagdane/go-report-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/AshishBagdane/go-report-engine/actions/workflows/ci.yml)
 [![Test Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)](https://github.com/AshishBagdane/go-report-engine)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Built in Public](https://img.shields.io/badge/built%20in%20public-🚀-blueviolet)](https://github.com/AshishBagdane/go-report-engine)
