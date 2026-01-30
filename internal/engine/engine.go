@@ -11,6 +11,7 @@ import (
 
 	"github.com/AshishBagdane/report-engine/internal/errors"
 	"github.com/AshishBagdane/report-engine/internal/formatter"
+	"github.com/AshishBagdane/report-engine/internal/health"
 	"github.com/AshishBagdane/report-engine/internal/logging"
 	"github.com/AshishBagdane/report-engine/internal/memory"
 	"github.com/AshishBagdane/report-engine/internal/output"
@@ -489,6 +490,47 @@ func (r *ReportEngine) RunWithRecoveryContext(ctx context.Context) (err error) {
 	}()
 
 	return r.RunWithContext(ctx)
+}
+
+// Health checks the health of the engine and its components.
+func (r *ReportEngine) Health(ctx context.Context) map[string]health.Result {
+	results := make(map[string]health.Result)
+
+	// Check Provider
+	if checker, ok := r.Provider.(health.Checker); ok {
+		res, err := checker.CheckHealth(ctx)
+		if err != nil && res.Status == "" {
+			res.Status = health.StatusDown
+			res.Error = err.Error()
+		}
+		results["provider"] = res
+	} else {
+		results["provider"] = health.Result{Status: health.StatusUp, Details: map[string]interface{}{"note": "health check not implemented"}}
+	}
+
+	// Check Output
+	if checker, ok := r.Output.(health.Checker); ok {
+		res, err := checker.CheckHealth(ctx)
+		if err != nil && res.Status == "" {
+			res.Status = health.StatusDown
+			res.Error = err.Error()
+		}
+		results["output"] = res
+	} else {
+		results["output"] = health.Result{Status: health.StatusUp, Details: map[string]interface{}{"note": "health check not implemented"}}
+	}
+
+	// Check Processor (usually stateless but technically could report health)
+	if checker, ok := r.Processor.(health.Checker); ok {
+		res, err := checker.CheckHealth(ctx)
+		if err != nil && res.Status == "" {
+			res.Status = health.StatusDown
+			res.Error = err.Error()
+		}
+		results["processor"] = res
+	}
+
+	return results
 }
 
 // max returns the maximum of two integers (helper for Go versions < 1.21)

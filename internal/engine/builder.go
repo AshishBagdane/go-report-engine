@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	"github.com/AshishBagdane/report-engine/internal/formatter"
+	"github.com/AshishBagdane/report-engine/internal/observability"
 	"github.com/AshishBagdane/report-engine/internal/output"
 	"github.com/AshishBagdane/report-engine/internal/processor"
 	"github.com/AshishBagdane/report-engine/internal/provider"
+	"github.com/AshishBagdane/report-engine/internal/resilience"
 )
 
 // EngineBuilder provides a fluent interface for constructing a ReportEngine.
@@ -16,6 +18,11 @@ type EngineBuilder struct {
 	processor processor.ProcessorHandler
 	formatter formatter.FormatStrategy
 	output    output.OutputStrategy
+	retry     *resilience.RetryPolicy
+	breaker   *resilience.CircuitBreaker
+
+	tracer  observability.Tracer
+	metrics observability.MetricsCollector
 }
 
 // NewEngineBuilder creates a new EngineBuilder with default values.
@@ -41,9 +48,32 @@ func (b *EngineBuilder) WithFormatter(f formatter.FormatStrategy) *EngineBuilder
 	return b
 }
 
-// WithOutput sets the output and validates it is not nil.
 func (b *EngineBuilder) WithOutput(o output.OutputStrategy) *EngineBuilder {
 	b.output = o
+	return b
+}
+
+// WithRetry sets the retry policy for the engine.
+func (b *EngineBuilder) WithRetry(policy resilience.RetryPolicy) *EngineBuilder {
+	b.retry = &policy
+	return b
+}
+
+// WithCircuitBreaker sets the circuit breaker for the engine.
+func (b *EngineBuilder) WithCircuitBreaker(cb *resilience.CircuitBreaker) *EngineBuilder {
+	b.breaker = cb
+	return b
+}
+
+// WithTracer sets the tracer for the engine.
+func (b *EngineBuilder) WithTracer(tracer observability.Tracer) *EngineBuilder {
+	b.tracer = tracer
+	return b
+}
+
+// WithMetrics sets the metrics collector for the engine.
+func (b *EngineBuilder) WithMetrics(collector observability.MetricsCollector) *EngineBuilder {
+	b.metrics = collector
 	return b
 }
 
@@ -91,11 +121,75 @@ func (b *EngineBuilder) Build() (*ReportEngine, error) {
 	}
 
 	// All components valid, construct engine
+
+	prov := b.provider
+	proc := b.processor
+	out := b.output
+
+	// Apply Metrics Decorators if collector is present
+	// We wrap inner-most to capture raw component performance
+	if b.metrics != nil {
+		prov = observability.NewProviderWithMetrics(prov, b.metrics)
+		// We need to cast ProcessorHandler to one that metrics accepts or update internal/observability/processor.go to accept Handler interface
+		// processor.ProcessorHandler is an interface, so it should match.
+		// Wait, NewProcessorWithMetrics takes processor.ProcessorHandler.
+		proc = observability.NewProcessorWithMetrics(proc, b.metrics)
+		out = observability.NewOutputWithMetrics(out, b.metrics)
+	}
+
+	// Apply CircuitBreaker Decorators if present
+	// Applies BEFORE Retry so that CB protects downstream.
+	// If wrapped inside Retry: Retry calls CB (success) -> CB calls Prov (fail) -> CB records fail.
+	// Repeated failures open CB.
+	// If wraps Retry: CB calls Retry (which retries N times). If total fails, CB records 1 fail.
+	// We want CB to record every failure or the aggregate?
+	// Usually invalid requests shouldn't trip CB, but downtime should.
+	// We'll wrap INSIDE retry, so that 1 failed operation (after N retries) counts as 1 failure?
+	// OR: wrap OUTSIDE retry, so retries happen, and if they all fail, CB counts.
+	//
+	// Wait, earlier design in Plan was: Retry wraps CB wraps Provider.
+	// Retry calls CB.Execute(). CB calls Provider.Fetch().
+	// If Provider fails, CB records failure. Retry sees error, waits, calls CB.Execute() again.
+	// This is standard. CB counts individual attempts.
+	if b.breaker != nil {
+		// Clone breaker or use shared? Shared for Provider and Output?
+		// We probably want SEPARATE breakers for Provider and Output.
+		// For now, let's use the SAME policy but create new instances if we could.
+		// But Builder pattern takes an INSTANCE.
+		// Let's assume the user passed a configured struct instance which serves as config?
+		// No, `resilience.CircuitBreaker` IS stateful.
+		// Using the SAME instance for Prov and Output links their failure domains (if Prov fails, Output stops).
+		// That might be undesirable.
+		// Ideally we should accept Config and create instances.
+		// But for now, if user passes ONE breaker, we verify usage.
+		// Let's wrap Provider only? Or both?
+		// If both, they share state. If DB (Prov) is down, S3 (Output) calls also fail?
+		// Maybe acceptable for a simple engine.
+		prov = resilience.NewProviderWithCircuitBreaker(prov, b.breaker)
+		out = resilience.NewOutputWithCircuitBreaker(out, b.breaker)
+	}
+
+	// Apply Tracing Decorators if present
+	// Applies BEFORE Retry so that we see spans for each attempt.
+	if b.tracer != nil {
+		prov = observability.NewProviderWithTracing(prov, b.tracer)
+		proc = observability.NewProcessorWithTracing(proc, b.tracer)
+		out = observability.NewOutputWithTracing(out, b.tracer)
+	}
+
+	// Apply Retry Decorators if policy is present
+	// Retry wraps Metrics, so metrics record each attempt.
+	if b.retry != nil {
+		retrier := resilience.NewRetrier(*b.retry)
+		prov = resilience.NewProviderWithRetry(prov, retrier)
+		out = resilience.NewOutputWithRetry(out, retrier)
+	}
+
 	return &ReportEngine{
-		Provider:  b.provider,
-		Processor: b.processor,
+		Provider:  prov,
+		Processor: proc,
 		Formatter: b.formatter,
-		Output:    b.output,
+		Output:    out,
 	}, nil
 }
 

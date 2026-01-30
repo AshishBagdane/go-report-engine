@@ -9,10 +9,27 @@ import (
 // It defines which provider, processor pipeline, formatter,
 // and output module should be used to generate reports.
 type Config struct {
-	Provider   ProviderConfig    `json:"provider" yaml:"provider"`
-	Processors []ProcessorConfig `json:"processors" yaml:"processors"`
-	Formatter  FormatterConfig   `json:"formatter" yaml:"formatter"`
-	Output     OutputConfig      `json:"output" yaml:"output"`
+	Provider       ProviderConfig        `json:"provider" yaml:"provider"`
+	Processors     []ProcessorConfig     `json:"processors" yaml:"processors"`
+	Formatter      FormatterConfig       `json:"formatter" yaml:"formatter"`
+	Output         OutputConfig          `json:"output" yaml:"output"`
+	Retry          *RetryConfig          `json:"retry,omitempty" yaml:"retry,omitempty"`
+	CircuitBreaker *CircuitBreakerConfig `json:"circuit_breaker,omitempty" yaml:"circuit_breaker,omitempty"`
+}
+
+// RetryConfig defines the retry policy settings.
+type RetryConfig struct {
+	MaxRetries int     `json:"max_retries" yaml:"max_retries"`
+	BaseDelay  string  `json:"base_delay" yaml:"base_delay"` // Parsed to time.Duration
+	MaxDelay   string  `json:"max_delay" yaml:"max_delay"`   // Parsed to time.Duration
+	Factor     float64 `json:"factor" yaml:"factor"`
+	Jitter     bool    `json:"jitter" yaml:"jitter"`
+}
+
+// CircuitBreakerConfig defines circuit breaker settings.
+type CircuitBreakerConfig struct {
+	FailureThreshold uint   `json:"failure_threshold" yaml:"failure_threshold"`
+	ResetTimeout     string `json:"reset_timeout" yaml:"reset_timeout"` // Parsed to time.Duration
 }
 
 // ProviderConfig represents the selected provider and its parameters.
@@ -65,6 +82,10 @@ func (c Config) Validate() error {
 	if err := c.validateOutput(); err != nil {
 		errors = append(errors, err.Error())
 	}
+
+	// Validate Retry (Optional, but if present must be valid)
+	// We don't have a strict validator for it yet as it's optional,
+	// but we could ensure Factor >= 1.0 if specified.
 
 	if len(errors) > 0 {
 		return fmt.Errorf("config validation failed: %s", strings.Join(errors, "; "))
