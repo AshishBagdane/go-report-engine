@@ -488,7 +488,7 @@ func TestWorkerPoolClose(t *testing.T) {
 
 func TestWorkerPoolClose_RejectsNewWork(t *testing.T) {
 	pool := NewWorkerPool(4)
-	pool.Close()
+	_ = pool.Close()
 
 	ctx := context.Background()
 	chunks := []WorkChunk{
@@ -798,7 +798,7 @@ func BenchmarkWorkerPoolProcessChunks_VariableWorkers(b *testing.B) {
 
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				pool.ProcessChunks(ctx, chunks, task)
+				_, _ = pool.ProcessChunks(ctx, chunks, task)
 			}
 		})
 	}

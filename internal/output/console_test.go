@@ -104,7 +104,7 @@ func TestConsoleOutputSendJSON(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, jsonData)
+		_ = output.Send(ctx, jsonData)
 	})
 
 	if !strings.Contains(captured, `"id":1`) {
@@ -119,7 +119,7 @@ func TestConsoleOutputSendMultiline(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, multilineData)
+		_ = output.Send(ctx, multilineData)
 	})
 
 	if !strings.Contains(captured, "line1") || !strings.Contains(captured, "line2") {
@@ -136,7 +136,7 @@ func TestConsoleOutputSendLargeData(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, largeData)
+		_ = output.Send(ctx, largeData)
 	})
 
 	// Verify size (should be original + newline)
@@ -153,7 +153,7 @@ func TestConsoleOutputSendSpecialCharacters(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, specialData)
+		_ = output.Send(ctx, specialData)
 	})
 
 	if !strings.Contains(captured, "Hello") || !strings.Contains(captured, "World") {
@@ -168,7 +168,7 @@ func TestConsoleOutputSendUnicode(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, unicodeData)
+		_ = output.Send(ctx, unicodeData)
 	})
 
 	if !strings.Contains(captured, "世界") || !strings.Contains(captured, "🎉") {
@@ -189,7 +189,7 @@ func TestConsoleOutputMultipleSends(t *testing.T) {
 	ctx := context.Background()
 	captured := captureStdout(func() {
 		for _, data := range sends {
-			output.Send(ctx, data)
+			_ = output.Send(ctx, data)
 		}
 	})
 
@@ -228,7 +228,7 @@ func TestConsoleOutputZeroValue(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, testData)
+		_ = output.Send(ctx, testData)
 	})
 
 	if !strings.Contains(captured, "test") {
@@ -299,7 +299,7 @@ func BenchmarkConsoleOutputSend(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		output.Send(ctx, testData)
+		_ = output.Send(ctx, testData)
 	}
 
 	os.Stdout = old
@@ -323,7 +323,7 @@ func BenchmarkConsoleOutputSendLarge(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		output.Send(ctx, testData)
+		_ = output.Send(ctx, testData)
 	}
 
 	os.Stdout = old

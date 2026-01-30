@@ -427,7 +427,7 @@ func BenchmarkEngineClose(b *testing.B) {
 		}
 		b.StartTimer()
 
-		engine.Close()
+		_ = engine.Close()
 	}
 }
 
@@ -447,7 +447,7 @@ func BenchmarkEngineCloseWithContext(b *testing.B) {
 		}
 		b.StartTimer()
 
-		engine.CloseWithContext(ctx)
+		_ = engine.CloseWithContext(ctx)
 	}
 }
 

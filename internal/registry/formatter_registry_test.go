@@ -409,7 +409,7 @@ func TestFormatterConcurrentMixedOperations(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			name := string(rune('a' + (id % 5)))
-			GetFormatter(name)
+			_, _ = GetFormatter(name)
 		}(i)
 	}
 
@@ -465,7 +465,7 @@ func TestFormatterRaceDetector(t *testing.T) {
 	// Reader goroutine
 	go func() {
 		for i := 0; i < 1000; i++ {
-			GetFormatter("test")
+			_, _ = GetFormatter("test")
 			ListFormatters()
 			IsFormatterRegistered("test")
 			FormatterCount()
@@ -495,7 +495,7 @@ func BenchmarkGetFormatter(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		GetFormatter("bench")
+		_, _ = GetFormatter("bench")
 	}
 }
 
@@ -507,7 +507,7 @@ func BenchmarkGetFormatterParallel(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			GetFormatter("bench")
+			_, _ = GetFormatter("bench")
 		}
 	})
 }

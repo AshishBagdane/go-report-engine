@@ -346,13 +346,13 @@ func TestLoadFromBytesUnsupportedFormat(t *testing.T) {
 // TestEnvironmentOverrides tests environment variable overrides
 func TestEnvironmentOverrides(t *testing.T) {
 	// Set environment variables
-	os.Setenv("ENGINE_PROVIDER_TYPE", "postgres")
-	os.Setenv("ENGINE_FORMATTER_TYPE", "csv")
-	os.Setenv("ENGINE_OUTPUT_TYPE", "file")
+	_ = os.Setenv("ENGINE_PROVIDER_TYPE", "postgres")
+	_ = os.Setenv("ENGINE_FORMATTER_TYPE", "csv")
+	_ = os.Setenv("ENGINE_OUTPUT_TYPE", "file")
 	defer func() {
-		os.Unsetenv("ENGINE_PROVIDER_TYPE")
-		os.Unsetenv("ENGINE_FORMATTER_TYPE")
-		os.Unsetenv("ENGINE_OUTPUT_TYPE")
+		_ = os.Unsetenv("ENGINE_PROVIDER_TYPE")
+		_ = os.Unsetenv("ENGINE_FORMATTER_TYPE")
+		_ = os.Unsetenv("ENGINE_OUTPUT_TYPE")
 	}()
 
 	yamlContent := `
@@ -395,15 +395,15 @@ output:
 // TestEnvironmentParamOverrides tests param overrides
 func TestEnvironmentParamOverrides(t *testing.T) {
 	// Set parameter environment variables
-	os.Setenv("ENGINE_PROVIDER_PARAM_HOST", "localhost")
-	os.Setenv("ENGINE_PROVIDER_PARAM_PORT", "5432")
-	os.Setenv("ENGINE_FORMATTER_PARAM_INDENT", "4")
-	os.Setenv("ENGINE_OUTPUT_PARAM_PATH", "/tmp/output.json")
+	_ = os.Setenv("ENGINE_PROVIDER_PARAM_HOST", "localhost")
+	_ = os.Setenv("ENGINE_PROVIDER_PARAM_PORT", "5432")
+	_ = os.Setenv("ENGINE_FORMATTER_PARAM_INDENT", "4")
+	_ = os.Setenv("ENGINE_OUTPUT_PARAM_PATH", "/tmp/output.json")
 	defer func() {
-		os.Unsetenv("ENGINE_PROVIDER_PARAM_HOST")
-		os.Unsetenv("ENGINE_PROVIDER_PARAM_PORT")
-		os.Unsetenv("ENGINE_FORMATTER_PARAM_INDENT")
-		os.Unsetenv("ENGINE_OUTPUT_PARAM_PATH")
+		_ = os.Unsetenv("ENGINE_PROVIDER_PARAM_HOST")
+		_ = os.Unsetenv("ENGINE_PROVIDER_PARAM_PORT")
+		_ = os.Unsetenv("ENGINE_FORMATTER_PARAM_INDENT")
+		_ = os.Unsetenv("ENGINE_OUTPUT_PARAM_PATH")
 	}()
 
 	yamlContent := `
@@ -456,8 +456,8 @@ output:
 
 // TestEnvironmentOverridesWithoutFlag tests that env vars are ignored without flag
 func TestEnvironmentOverridesWithoutFlag(t *testing.T) {
-	os.Setenv("ENGINE_PROVIDER_TYPE", "postgres")
-	defer os.Unsetenv("ENGINE_PROVIDER_TYPE")
+	_ = os.Setenv("ENGINE_PROVIDER_TYPE", "postgres")
+	defer func() { _ = os.Unsetenv("ENGINE_PROVIDER_TYPE") }()
 
 	yamlContent := `
 provider:
@@ -520,8 +520,8 @@ output:
 
 // TestLoadFromFileWithEnvConvenience tests convenience function with env
 func TestLoadFromFileWithEnvConvenience(t *testing.T) {
-	os.Setenv("ENGINE_PROVIDER_TYPE", "postgres")
-	defer os.Unsetenv("ENGINE_PROVIDER_TYPE")
+	_ = os.Setenv("ENGINE_PROVIDER_TYPE", "postgres")
+	defer func() { _ = os.Unsetenv("ENGINE_PROVIDER_TYPE") }()
 
 	yamlContent := `
 provider:
@@ -624,8 +624,8 @@ output:
 
 // TestApplyParamOverridesNilMap tests param overrides with nil map
 func TestApplyParamOverridesNilMap(t *testing.T) {
-	os.Setenv("ENGINE_TEST_PARAM_KEY", "value")
-	defer os.Unsetenv("ENGINE_TEST_PARAM_KEY")
+	_ = os.Setenv("ENGINE_TEST_PARAM_KEY", "value")
+	defer func() { _ = os.Unsetenv("ENGINE_TEST_PARAM_KEY") }()
 
 	var params map[string]string
 	applyParamOverrides(&params, "ENGINE_TEST_PARAM_")

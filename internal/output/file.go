@@ -47,7 +47,7 @@ func (f *FileOutput) Send(ctx context.Context, data []byte) error {
 	if err != nil {
 		return fmt.Errorf("file output: failed to open file %s: %w", f.Path, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Write data
 	// Note: output.go interface says "Send(ctx, data)".

@@ -423,6 +423,6 @@ func BenchmarkConfigValidate(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		config.Validate()
+		_ = config.Validate()
 	}
 }

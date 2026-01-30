@@ -155,7 +155,7 @@ func BenchmarkNewProcessorError(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewProcessorError("validate", ErrorTypeValidation, baseErr)
+		_ = NewProcessorError("validate", ErrorTypeValidation, baseErr)
 	}
 }
 
@@ -165,7 +165,7 @@ func BenchmarkProcessorErrorWithChaining(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewProcessorError("validate", ErrorTypeValidation, baseErr).
+		_ = NewProcessorError("validate", ErrorTypeValidation, baseErr).
 			WithProcessorType("filter").
 			WithProcessorName("min_score").
 			WithRecordIndex(42)

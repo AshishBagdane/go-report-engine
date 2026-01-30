@@ -37,7 +37,7 @@ func (f *YAMLFormatter) Format(ctx context.Context, data []map[string]interface{
 	var buf bytes.Buffer
 	encoder := yaml.NewEncoder(&buf)
 	encoder.SetIndent(f.Indent)
-	defer encoder.Close()
+	defer func() { _ = encoder.Close() }()
 
 	if err := encoder.Encode(data); err != nil {
 		return nil, fmt.Errorf("yaml formatter: failed to encode data: %w", err)

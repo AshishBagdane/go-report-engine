@@ -169,9 +169,9 @@ func TestEngineErrorTypeCheckers(t *testing.T) {
 func TestWithContext(t *testing.T) {
 	err := NewEngineError(ComponentProvider, "fetch", ErrorTypeTransient, fmt.Errorf("error"))
 
-	err.WithContext("key1", "value1")
-	err.WithContext("key2", 42)
-	err.WithContext("key3", true)
+	_ = err.WithContext("key1", "value1")
+	_ = err.WithContext("key2", 42)
+	_ = err.WithContext("key3", true)
 
 	if len(err.Context) != 3 {
 		t.Errorf("Context should have 3 entries, got %d", len(err.Context))
@@ -197,7 +197,7 @@ func TestWithContextMap(t *testing.T) {
 		"key3": true,
 	}
 
-	err.WithContextMap(contextMap)
+	_ = err.WithContextMap(contextMap)
 
 	if len(err.Context) != 3 {
 		t.Errorf("Context should have 3 entries, got %d", len(err.Context))
@@ -477,7 +477,7 @@ func BenchmarkNewEngineError(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewEngineError(ComponentProvider, "fetch", ErrorTypeTransient, baseErr)
+		_ = NewEngineError(ComponentProvider, "fetch", ErrorTypeTransient, baseErr)
 	}
 }
 
@@ -487,7 +487,7 @@ func BenchmarkWrap(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Wrap(ComponentProvider, "fetch", baseErr)
+		_ = Wrap(ComponentProvider, "fetch", baseErr)
 	}
 }
 

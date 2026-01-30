@@ -43,7 +43,7 @@ func (p *CSVProvider) Fetch(ctx context.Context) ([]map[string]interface{}, erro
 	if err != nil {
 		return nil, fmt.Errorf("csv provider: failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	reader := csv.NewReader(file)
 	reader.Comma = p.Delimiter

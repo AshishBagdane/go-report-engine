@@ -7,6 +7,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/AshishBagdane/go-report-engine/internal/errors"
@@ -46,6 +47,9 @@ type ReportEngine struct {
 	// ChunkSize is the number of records to process in each batch during streaming.
 	// Default: 1000
 	ChunkSize int
+
+	// closeOnce ensures cleanup is performed exactly once
+	closeOnce sync.Once
 }
 
 // WithChunkSize sets the chunk size for streaming operations.

@@ -140,8 +140,8 @@ output:
 func TestLoadAndBuildWithEnv(t *testing.T) {
 	setupTestRegistries()
 
-	os.Setenv("ENGINE_PROVIDER_TYPE", "mock")
-	defer os.Unsetenv("ENGINE_PROVIDER_TYPE")
+	_ = os.Setenv("ENGINE_PROVIDER_TYPE", "mock")
+	defer func() { _ = os.Unsetenv("ENGINE_PROVIDER_TYPE") }()
 
 	yamlContent := `
 provider:
@@ -650,7 +650,7 @@ output:
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		LoadAndBuild(configPath)
+		_, _ = LoadAndBuild(configPath)
 	}
 }
 
@@ -660,7 +660,7 @@ func BenchmarkBuildFromDefault(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		BuildFromDefault()
+		_, _ = BuildFromDefault()
 	}
 }
 
@@ -680,6 +680,6 @@ output:
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		BuildFromBytes(yamlContent, "yaml")
+		_, _ = BuildFromBytes(yamlContent, "yaml")
 	}
 }

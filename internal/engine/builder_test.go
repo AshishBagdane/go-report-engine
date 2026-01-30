@@ -432,7 +432,7 @@ func TestEngineBuilderResetAndReuse(t *testing.T) {
 func BenchmarkEngineBuilderBuild(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewEngineBuilder().
+		_, _ = NewEngineBuilder().
 			WithProvider(&builderMockProvider{}).
 			WithProcessor(&builderMockProcessor{}).
 			WithFormatter(&builderMockFormatter{}).
@@ -447,7 +447,7 @@ func BenchmarkEngineBuilderReuseWithReset(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		builder.Reset().
+		_, _ = builder.Reset().
 			WithProvider(&builderMockProvider{}).
 			WithProcessor(&builderMockProcessor{}).
 			WithFormatter(&builderMockFormatter{}).

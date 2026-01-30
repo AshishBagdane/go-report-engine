@@ -414,7 +414,7 @@ func TestOutputConcurrentMixedOperations(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			name := string(rune('a' + (id % 5)))
-			GetOutput(name)
+			_, _ = GetOutput(name)
 		}(i)
 	}
 
@@ -470,7 +470,7 @@ func TestOutputRaceDetector(t *testing.T) {
 	// Reader goroutine
 	go func() {
 		for i := 0; i < 1000; i++ {
-			GetOutput("test")
+			_, _ = GetOutput("test")
 			ListOutputs()
 			IsOutputRegistered("test")
 			OutputCount()

@@ -101,15 +101,15 @@ func createLargeCSV(t *testing.T, path string, records int) {
 	if err != nil {
 		t.Fatalf("Failed to create CSV: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Header
-	f.WriteString("id,name,value\n")
+	_, _ = f.WriteString("id,name,value\n")
 
 	// Records
 	for i := 1; i <= records; i++ {
 		line := fmt.Sprintf("%d,User%d,%d\n", i, i, i*10)
-		f.WriteString(line)
+		_, _ = f.WriteString(line)
 	}
 }
 

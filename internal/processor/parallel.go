@@ -239,7 +239,7 @@ func (p *ParallelProcessor) Configure(params map[string]string) error {
 
 	// Recreate worker pool with new worker count
 	if p.pool != nil {
-		p.pool.Close()
+		_ = p.pool.Close()
 	}
 	p.pool = NewWorkerPool(p.workers)
 

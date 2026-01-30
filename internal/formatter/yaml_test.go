@@ -35,7 +35,7 @@ func TestYAMLFormatter_Format(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f := NewYAMLFormatter()
 			if tt.indent != "" {
-				f.Configure(map[string]string{"indent": tt.indent})
+				_ = f.Configure(map[string]string{"indent": tt.indent})
 			}
 
 			got, err := f.Format(context.Background(), data)

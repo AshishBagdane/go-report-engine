@@ -269,7 +269,7 @@ func BenchmarkMockProviderFetch(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		provider.Fetch(ctx)
+		_, _ = provider.Fetch(ctx)
 	}
 }
 
@@ -281,7 +281,7 @@ func BenchmarkMockProviderFetchParallel(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			provider.Fetch(ctx)
+			_, _ = provider.Fetch(ctx)
 		}
 	})
 }

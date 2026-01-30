@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"io"
-	"sync"
 	"time"
 
 	"github.com/AshishBagdane/go-report-engine/pkg/api"
@@ -81,9 +80,8 @@ func (r *ReportEngine) Close() error {
 func (r *ReportEngine) CloseWithContext(ctx context.Context) error {
 	// Use sync.Once to ensure cleanup happens only once
 	var closeErr error
-	closeOnce := &sync.Once{}
 
-	closeOnce.Do(func() {
+	r.closeOnce.Do(func() {
 		var closer api.MultiCloser
 
 		// Add components in reverse order (LIFO)

@@ -376,7 +376,7 @@ func BenchmarkNewProviderError(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewProviderError("fetch", ErrorTypeTransient, baseErr)
+		_ = NewProviderError("fetch", ErrorTypeTransient, baseErr)
 	}
 }
 
@@ -386,7 +386,7 @@ func BenchmarkProviderErrorWithChaining(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewProviderError("fetch", ErrorTypeTransient, baseErr).
+		_ = NewProviderError("fetch", ErrorTypeTransient, baseErr).
 			WithProviderType("postgres").
 			WithRecordCount(100).
 			WithQuery("SELECT * FROM users")

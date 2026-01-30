@@ -24,7 +24,7 @@ func NewOutputError(operation string, errorType ErrorType, err error) *OutputErr
 // WithOutputType sets the output type (e.g., "console", "file", "s3", "slack").
 func (e *OutputError) WithOutputType(outputType string) *OutputError {
 	e.OutputType = outputType
-	e.EngineError.WithContext("output_type", outputType)
+	_ = e.EngineError.WithContext("output_type", outputType)
 	return e
 }
 
@@ -33,9 +33,9 @@ func (e *OutputError) WithDestination(destination string) *OutputError {
 	e.Destination = destination
 	// Sanitize destination if it's a URL or path (might contain sensitive info)
 	if len(destination) > 100 {
-		e.EngineError.WithContext("destination_preview", destination[:100]+"...")
+		_ = e.EngineError.WithContext("destination_preview", destination[:100]+"...")
 	} else {
-		e.EngineError.WithContext("destination", destination)
+		_ = e.EngineError.WithContext("destination", destination)
 	}
 	return e
 }
@@ -43,19 +43,19 @@ func (e *OutputError) WithDestination(destination string) *OutputError {
 // WithDataSize sets the size of data being sent.
 func (e *OutputError) WithDataSize(size int64) *OutputError {
 	e.DataSize = size
-	e.EngineError.WithContext("data_size", size)
+	_ = e.EngineError.WithContext("data_size", size)
 	return e
 }
 
 // WithContext adds context information to the error and returns the OutputError.
 func (e *OutputError) WithContext(key string, value interface{}) *OutputError {
-	e.EngineError.WithContext(key, value)
+	_ = e.EngineError.WithContext(key, value)
 	return e
 }
 
 // WithContextMap adds multiple context entries to the error and returns the OutputError.
 func (e *OutputError) WithContextMap(ctx map[string]interface{}) *OutputError {
-	e.EngineError.WithContextMap(ctx)
+	_ = e.EngineError.WithContextMap(ctx)
 	return e
 }
 

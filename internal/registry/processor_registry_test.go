@@ -547,7 +547,7 @@ func TestProcessorConcurrentMixedOperations(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			name := fmt.Sprintf("proc_%d", id%5)
-			GetProcessor(name)
+			_, _ = GetProcessor(name)
 		}(i)
 	}
 
@@ -603,7 +603,7 @@ func TestProcessorRaceDetector(t *testing.T) {
 	// Reader goroutine
 	go func() {
 		for i := 0; i < 1000; i++ {
-			GetProcessor("test")
+			_, _ = GetProcessor("test")
 			ListProcessors()
 			IsProcessorRegistered("test")
 			ProcessorCount()
@@ -633,7 +633,7 @@ func BenchmarkGetProcessor(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		GetProcessor("bench")
+		_, _ = GetProcessor("bench")
 	}
 }
 
@@ -645,7 +645,7 @@ func BenchmarkGetProcessorParallel(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			GetProcessor("bench")
+			_, _ = GetProcessor("bench")
 		}
 	})
 }

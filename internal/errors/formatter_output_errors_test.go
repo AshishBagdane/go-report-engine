@@ -313,7 +313,7 @@ func BenchmarkNewFormatterError(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewFormatterError("format", ErrorTypePermanent, baseErr)
+		_ = NewFormatterError("format", ErrorTypePermanent, baseErr)
 	}
 }
 
@@ -323,7 +323,7 @@ func BenchmarkNewOutputError(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewOutputError("send", ErrorTypeTransient, baseErr)
+		_ = NewOutputError("send", ErrorTypeTransient, baseErr)
 	}
 }
 
@@ -333,7 +333,7 @@ func BenchmarkOutputErrorWithChaining(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewOutputError("send", ErrorTypeTransient, baseErr).
+		_ = NewOutputError("send", ErrorTypeTransient, baseErr).
 			WithOutputType("file").
 			WithDestination("/tmp/output.txt").
 			WithDataSize(1024)

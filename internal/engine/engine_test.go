@@ -543,7 +543,7 @@ func BenchmarkReportEngineRun(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		engine.Run()
+		_ = engine.Run()
 	}
 }
 
@@ -562,7 +562,7 @@ func BenchmarkReportEngineRunWithRecovery(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		engine.RunWithRecovery()
+		_ = engine.RunWithRecovery()
 	}
 }
 
@@ -584,6 +584,6 @@ func BenchmarkReportEngineRunWithContext(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		engine.RunWithContext(ctx)
+		_ = engine.RunWithContext(ctx)
 	}
 }

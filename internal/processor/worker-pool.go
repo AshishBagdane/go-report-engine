@@ -342,7 +342,7 @@ func (p *WorkerPool) CloseWithContext(ctx context.Context) error {
 	done := make(chan struct{})
 
 	go func() {
-		p.Close()
+		_ = p.Close()
 		close(done)
 	}()
 

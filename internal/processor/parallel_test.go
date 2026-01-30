@@ -921,7 +921,7 @@ func BenchmarkParallelProcessorProcess_Sequential(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		parallel.Process(ctx, data)
+		_, _ = parallel.Process(ctx, data)
 	}
 }
 
@@ -943,7 +943,7 @@ func BenchmarkParallelProcessorProcess_Parallel(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		parallel.Process(ctx, data)
+		_, _ = parallel.Process(ctx, data)
 	}
 }
 
@@ -969,7 +969,7 @@ func BenchmarkParallelProcessorProcess_VariableWorkers(b *testing.B) {
 
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				parallel.Process(ctx, data)
+				_, _ = parallel.Process(ctx, data)
 			}
 		})
 	}
@@ -997,7 +997,7 @@ func BenchmarkParallelProcessorProcess_VariableDataSize(b *testing.B) {
 
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				parallel.Process(ctx, data)
+				_, _ = parallel.Process(ctx, data)
 			}
 		})
 	}

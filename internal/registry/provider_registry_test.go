@@ -415,7 +415,7 @@ func TestProviderConcurrentMixedOperations(t *testing.T) {
 		go func(id int) {
 			defer wg.Done()
 			name := string(rune('a' + (id % 5)))
-			GetProvider(name)
+			_, _ = GetProvider(name)
 		}(i)
 	}
 
@@ -471,7 +471,7 @@ func TestProviderRaceDetector(t *testing.T) {
 	// Reader goroutine
 	go func() {
 		for i := 0; i < 1000; i++ {
-			GetProvider("test")
+			_, _ = GetProvider("test")
 			ListProviders()
 			IsProviderRegistered("test")
 			ProviderCount()
@@ -501,7 +501,7 @@ func BenchmarkGetProvider(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		GetProvider("bench")
+		_, _ = GetProvider("bench")
 	}
 }
 
@@ -513,7 +513,7 @@ func BenchmarkGetProviderParallel(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			GetProvider("bench")
+			_, _ = GetProvider("bench")
 		}
 	})
 }

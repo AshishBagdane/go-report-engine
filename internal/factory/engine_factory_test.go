@@ -442,7 +442,7 @@ func BenchmarkNewEngineFromConfig(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewEngineFromConfig(config)
+		_, _ = NewEngineFromConfig(config)
 	}
 }
 
@@ -470,6 +470,6 @@ func BenchmarkNewEngineFromConfigWithProcessors(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		NewEngineFromConfig(config)
+		_, _ = NewEngineFromConfig(config)
 	}
 }

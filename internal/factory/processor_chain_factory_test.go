@@ -509,7 +509,7 @@ func BenchmarkBuildProcessorChainSingle(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		BuildProcessorChain(configs)
+		_, _ = BuildProcessorChain(configs)
 	}
 }
 
@@ -525,7 +525,7 @@ func BenchmarkBuildProcessorChainMultiple(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		BuildProcessorChain(configs)
+		_, _ = BuildProcessorChain(configs)
 	}
 }
 
@@ -544,6 +544,6 @@ func BenchmarkBuildProcessorChainConfigurable(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		BuildProcessorChain(configs)
+		_, _ = BuildProcessorChain(configs)
 	}
 }
