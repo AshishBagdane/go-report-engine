@@ -14,7 +14,10 @@ examples/
 │   └── env_override_demo.sh   # Environment variable demo
 ├── config_loading/             # Config file loading examples
 ├── defaults_usage/             # Default config examples
-└── integration_patterns/       # Integration patterns
+├── integration_patterns/       # Integration patterns
+├── resilience_demo/            # Retry and Circuit Breaker demo
+├── observability_demo/         # Metrics and Tracing demo
+└── health_endpoints/           # Health Check API demo
 ```
 
 ## Quick Start
@@ -65,6 +68,17 @@ go run main.go
 - Must variants for initialization
 - Fallback patterns
 - Building from raw bytes
+
+### 4. Enterprise Features
+
+#### Resilience (`resilience_demo/`)
+Demonstrates specific failure handling with Retry policies and Circuit Breakers.
+
+#### Observability (`observability_demo/`)
+Shows how to inspect the engine's internal state using Metrics and Tracing.
+
+#### Health (`health_endpoints/`)
+Example of exposing the `engine.Health()` status via an HTTP server.
 
 ## Configuration Files
 
@@ -141,9 +155,15 @@ Or run all examples:
 
 ```bash
 for dir in config_loading defaults_usage integration_patterns; do
-    echo "=== Running $dir ==="
-    go run examples/$dir/main.go
+    	echo "=== Running $dir ==="
+	go run examples/$dir/main.go
 done
+
+# Run new feature demos
+go run examples/resilience_demo/main.go
+go run examples/observability_demo/main.go
+# Health endpoint runs a server, so run it manually
+# go run examples/health_endpoints/main.go
 ```
 
 ## Next Steps
