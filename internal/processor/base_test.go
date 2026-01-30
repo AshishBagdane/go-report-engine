@@ -367,7 +367,7 @@ func BenchmarkBaseProcessorProcess(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		proc.Process(ctx, testData)
+		_, _ = proc.Process(ctx, testData)
 	}
 }
 
@@ -387,7 +387,7 @@ func BenchmarkBaseProcessorProcessLarge(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		proc.Process(ctx, testData)
+		_, _ = proc.Process(ctx, testData)
 	}
 }
 
@@ -408,6 +408,6 @@ func BenchmarkBaseProcessorChain(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		proc1.Process(ctx, testData)
+		_, _ = proc1.Process(ctx, testData)
 	}
 }

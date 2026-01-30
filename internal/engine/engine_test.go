@@ -476,7 +476,6 @@ func TestReportEngineWithContext(t *testing.T) {
 // TestReportEngineContextCancellation tests context cancellation
 func TestReportEngineContextCancellation(t *testing.T) {
 	// Create context-aware provider that checks for cancellation
-	type ctxProvider struct{}
 
 	cancelCalled := false
 

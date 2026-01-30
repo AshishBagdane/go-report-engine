@@ -65,7 +65,7 @@ func example1_BasicParallelProcessing() {
 
 	// Wrap it in parallel processor with default config
 	parallelProc := processor.NewParallelProcessor(baseProcessor)
-	defer parallelProc.Close()
+	defer func() { _ = parallelProc.Close() }()
 
 	// Process data
 	data := generateTestData(1000)
@@ -99,7 +99,7 @@ func example2_ConfiguredParallelProcessing() {
 	}
 
 	parallelProc := processor.NewParallelProcessorWithConfig(baseProcessor, config)
-	defer parallelProc.Close()
+	defer func() { _ = parallelProc.Close() }()
 
 	// Process data
 	data := generateTestData(2000)
@@ -273,7 +273,7 @@ func generateValidData(count int) []map[string]interface{} {
 
 func closeProcessor(proc processor.ProcessorHandler) {
 	if closer, ok := proc.(interface{ Close() error }); ok {
-		closer.Close()
+		_ = closer.Close()
 	}
 }
 

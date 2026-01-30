@@ -24,13 +24,14 @@ func TestNewLoader(t *testing.T) {
 func TestLoaderWithEnvOverrides(t *testing.T) {
 	loader := NewLoader().WithEnvOverrides()
 
-	if !loader.applyEnvOverrides {
-		t.Error("WithEnvOverrides() should enable env overrides")
-	}
-
 	// Should return loader for chaining
 	if loader == nil {
 		t.Error("WithEnvOverrides() should return loader")
+		return
+	}
+
+	if !loader.applyEnvOverrides {
+		t.Error("WithEnvOverrides() should enable env overrides")
 	}
 }
 

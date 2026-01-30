@@ -459,7 +459,7 @@ func BenchmarkJSONFormatterFormat(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		formatter.Format(ctx, testData)
+		_, _ = formatter.Format(ctx, testData)
 	}
 }
 
@@ -480,7 +480,7 @@ func BenchmarkJSONFormatterFormatLarge(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		formatter.Format(ctx, testData)
+		_, _ = formatter.Format(ctx, testData)
 	}
 }
 
@@ -505,7 +505,7 @@ func BenchmarkJSONFormatterFormatNested(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		formatter.Format(ctx, testData)
+		_, _ = formatter.Format(ctx, testData)
 	}
 }
 

@@ -23,7 +23,7 @@ func captureStdout(f func()) string {
 
 	// Read in a goroutine to prevent blocking
 	go func() {
-		io.Copy(&buf, r)
+		_, _ = io.Copy(&buf, r)
 		close(done)
 	}()
 
@@ -31,7 +31,7 @@ func captureStdout(f func()) string {
 	f()
 
 	// Close writer and wait for reader
-	w.Close()
+	_ = w.Close()
 	<-done
 	os.Stdout = old
 
@@ -57,7 +57,7 @@ func TestConsoleOutputSend(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, testData)
+		_ = output.Send(ctx, testData)
 	})
 
 	expectedOutput := "test output\n"
@@ -73,7 +73,7 @@ func TestConsoleOutputSendEmpty(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, testData)
+		_ = output.Send(ctx, testData)
 	})
 
 	expectedOutput := "\n"
@@ -88,7 +88,7 @@ func TestConsoleOutputSendNil(t *testing.T) {
 
 	ctx := context.Background()
 	captured := captureStdout(func() {
-		output.Send(ctx, nil)
+		_ = output.Send(ctx, nil)
 	})
 
 	expectedOutput := "\n"
@@ -254,7 +254,7 @@ func TestConsoleOutputConcurrentSends(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to open /dev/null: %v", err)
 	}
-	defer devNull.Close()
+	defer func() { _ = devNull.Close() }()
 	os.Stdout = devNull
 
 	ctx := context.Background()
@@ -292,7 +292,7 @@ func BenchmarkConsoleOutputSend(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to open /dev/null: %v", err)
 	}
-	defer devNull.Close()
+	defer func() { _ = devNull.Close() }()
 	os.Stdout = devNull
 
 	ctx := context.Background()
@@ -316,7 +316,7 @@ func BenchmarkConsoleOutputSendLarge(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to open /dev/null: %v", err)
 	}
-	defer devNull.Close()
+	defer func() { _ = devNull.Close() }()
 	os.Stdout = devNull
 
 	ctx := context.Background()

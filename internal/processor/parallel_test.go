@@ -291,7 +291,7 @@ func TestParallelProcessorConfigure_PropagatestoWrappedProcessor(t *testing.T) {
 func TestParallelProcessorProcess_EmptyData(t *testing.T) {
 	processor := &BaseProcessor{}
 	parallel := NewParallelProcessor(processor)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 	data := []map[string]interface{}{}
@@ -317,7 +317,7 @@ func TestParallelProcessorProcess_SmallDatasetSkipsParallel(t *testing.T) {
 	}
 
 	parallel := NewParallelProcessor(processor)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	// Data smaller than minChunkSize (100)
 	ctx := context.Background()
@@ -366,7 +366,7 @@ func TestParallelProcessorProcess_LargeDatasetUsesParallel(t *testing.T) {
 		MinChunkSize: 100,
 	}
 	parallel := NewParallelProcessorWithConfig(processor, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	// Large dataset that will be chunked
 	ctx := context.Background()
@@ -414,7 +414,7 @@ func TestParallelProcessorProcess_OrderPreserved(t *testing.T) {
 		MinChunkSize: 5,
 	}
 	parallel := NewParallelProcessorWithConfig(processor, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 	data := make([]map[string]interface{}, 100)
@@ -441,7 +441,7 @@ func TestParallelProcessorProcess_OrderPreserved(t *testing.T) {
 func TestParallelProcessorProcess_ContextCanceled(t *testing.T) {
 	processor := &BaseProcessor{}
 	parallel := NewParallelProcessor(processor)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
@@ -472,7 +472,7 @@ func TestParallelProcessorProcess_ContextTimeout(t *testing.T) {
 		MinChunkSize: 10,
 	}
 	parallel := NewParallelProcessorWithConfig(processor, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
@@ -510,7 +510,7 @@ func TestParallelProcessorProcess_ProcessorError(t *testing.T) {
 		MinChunkSize: 10,
 	}
 	parallel := NewParallelProcessorWithConfig(processor, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 	data := make([]map[string]interface{}, 200)
@@ -549,7 +549,7 @@ func TestParallelProcessorProcess_PartialFailure(t *testing.T) {
 		MinChunkSize: 10,
 	}
 	parallel := NewParallelProcessorWithConfig(processor, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 	data := make([]map[string]interface{}, 200)
@@ -617,7 +617,7 @@ func TestParallelProcessorCalculateChunkSize(t *testing.T) {
 				MinChunkSize: tt.minChunkSize,
 			}
 			parallel := NewParallelProcessorWithConfig(&BaseProcessor{}, config)
-			defer parallel.Close()
+			defer func() { _ = parallel.Close() }()
 
 			parallel.mu.RLock()
 			actual := parallel.calculateChunkSize(tt.dataSize)
@@ -643,7 +643,7 @@ func TestParallelProcessorWithFilterWrapper(t *testing.T) {
 		MinChunkSize: 10,
 	}
 	parallel := NewParallelProcessorWithConfig(filterWrapper, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 	data := make([]map[string]interface{}, 100)
@@ -682,7 +682,7 @@ func TestParallelProcessorWithValidatorWrapper(t *testing.T) {
 		MinChunkSize: 10,
 	}
 	parallel := NewParallelProcessorWithConfig(validatorWrapper, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 
@@ -737,7 +737,7 @@ func TestParallelProcessorWithTransformWrapper(t *testing.T) {
 		MinChunkSize: 10,
 	}
 	parallel := NewParallelProcessorWithConfig(transformWrapper, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 	data := make([]map[string]interface{}, 100)
@@ -785,7 +785,7 @@ func TestParallelProcessorWithNext(t *testing.T) {
 		MinChunkSize: 10,
 	}
 	parallel := NewParallelProcessorWithConfig(processor, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	// Create next processor
 	next := &mockProcessorHandler{
@@ -875,7 +875,7 @@ func TestParallelProcessorCloseWithContext(t *testing.T) {
 func TestParallelProcessorConcurrentAccess(t *testing.T) {
 	processor := &BaseProcessor{}
 	parallel := NewParallelProcessor(processor)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	var wg sync.WaitGroup
 	errors := make(chan error, 10)
@@ -911,7 +911,7 @@ func TestParallelProcessorConcurrentAccess(t *testing.T) {
 func BenchmarkParallelProcessorProcess_Sequential(b *testing.B) {
 	processor := &BaseProcessor{}
 	parallel := NewParallelProcessor(processor)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 	data := make([]map[string]interface{}, 50) // Below minChunkSize
@@ -933,7 +933,7 @@ func BenchmarkParallelProcessorProcess_Parallel(b *testing.B) {
 		MinChunkSize: 10,
 	}
 	parallel := NewParallelProcessorWithConfig(processor, config)
-	defer parallel.Close()
+	defer func() { _ = parallel.Close() }()
 
 	ctx := context.Background()
 	data := make([]map[string]interface{}, 1000)
@@ -959,7 +959,7 @@ func BenchmarkParallelProcessorProcess_VariableWorkers(b *testing.B) {
 				MinChunkSize: 10,
 			}
 			parallel := NewParallelProcessorWithConfig(processor, config)
-			defer parallel.Close()
+			defer func() { _ = parallel.Close() }()
 
 			ctx := context.Background()
 			data := make([]map[string]interface{}, 1000)
@@ -987,7 +987,7 @@ func BenchmarkParallelProcessorProcess_VariableDataSize(b *testing.B) {
 				MinChunkSize: 10,
 			}
 			parallel := NewParallelProcessorWithConfig(processor, config)
-			defer parallel.Close()
+			defer func() { _ = parallel.Close() }()
 
 			ctx := context.Background()
 			data := make([]map[string]interface{}, size)

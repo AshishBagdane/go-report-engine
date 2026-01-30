@@ -1,0 +1,188 @@
+examples/integration_patterns/main.go:97:11: Error return value of `os.Setenv` is not checked (errcheck)
+	os.Setenv("ENGINE_PROVIDER_TYPE", "mock")
+	         ^
+examples/integration_patterns/main.go:98:11: Error return value of `os.Setenv` is not checked (errcheck)
+	os.Setenv("ENGINE_FORMATTER_PARAM_INDENT", "4")
+	         ^
+examples/integration_patterns/main.go:100:14: Error return value of `os.Unsetenv` is not checked (errcheck)
+		os.Unsetenv("ENGINE_PROVIDER_TYPE")
+		           ^
+examples/integration_patterns/main.go:101:14: Error return value of `os.Unsetenv` is not checked (errcheck)
+		os.Unsetenv("ENGINE_FORMATTER_PARAM_INDENT")
+		           ^
+examples/parallel_processing/main.go:68:26: Error return value of `parallelProc.Close` is not checked (errcheck)
+	defer parallelProc.Close()
+	                        ^
+examples/parallel_processing/main.go:102:26: Error return value of `parallelProc.Close` is not checked (errcheck)
+	defer parallelProc.Close()
+	                        ^
+examples/parallel_processing/main.go:276:15: Error return value of `closer.Close` is not checked (errcheck)
+		closer.Close()
+		            ^
+internal/factory/engine_factory_test.go:445:22: Error return value is not checked (errcheck)
+		NewEngineFromConfig(config)
+		                   ^
+internal/factory/engine_factory_test.go:473:22: Error return value is not checked (errcheck)
+		NewEngineFromConfig(config)
+		                   ^
+internal/factory/processor_chain_factory_test.go:512:22: Error return value is not checked (errcheck)
+		BuildProcessorChain(configs)
+		                   ^
+internal/formatter/json_test.go:462:19: Error return value of `formatter.Format` is not checked (errcheck)
+		formatter.Format(ctx, testData)
+		                ^
+internal/formatter/json_test.go:483:19: Error return value of `formatter.Format` is not checked (errcheck)
+		formatter.Format(ctx, testData)
+		                ^
+internal/formatter/json_test.go:508:19: Error return value of `formatter.Format` is not checked (errcheck)
+		formatter.Format(ctx, testData)
+		                ^
+internal/formatter/yaml.go:40:21: Error return value of `encoder.Close` is not checked (errcheck)
+	defer encoder.Close()
+	                   ^
+internal/formatter/yaml_test.go:38:16: Error return value of `f.Configure` is not checked (errcheck)
+				f.Configure(map[string]string{"indent": tt.indent})
+				           ^
+internal/output/console_test.go:26:10: Error return value of `io.Copy` is not checked (errcheck)
+		io.Copy(&buf, r)
+		       ^
+internal/output/console_test.go:34:9: Error return value of `w.Close` is not checked (errcheck)
+	w.Close()
+	       ^
+internal/output/console_test.go:60:14: Error return value of `output.Send` is not checked (errcheck)
+		output.Send(ctx, testData)
+		           ^
+internal/output/console_test.go:76:14: Error return value of `output.Send` is not checked (errcheck)
+		output.Send(ctx, testData)
+		           ^
+internal/output/console_test.go:91:14: Error return value of `output.Send` is not checked (errcheck)
+		output.Send(ctx, nil)
+		           ^
+internal/output/console_test.go:257:21: Error return value of `devNull.Close` is not checked (errcheck)
+	defer devNull.Close()
+	                   ^
+internal/output/console_test.go:295:21: Error return value of `devNull.Close` is not checked (errcheck)
+	defer devNull.Close()
+	                   ^
+internal/output/console_test.go:319:21: Error return value of `devNull.Close` is not checked (errcheck)
+	defer devNull.Close()
+	                   ^
+internal/output/file.go:50:18: Error return value of `file.Close` is not checked (errcheck)
+	defer file.Close()
+	                ^
+internal/processor/base_test.go:370:15: Error return value of `proc.Process` is not checked (errcheck)
+		proc.Process(ctx, testData)
+		            ^
+internal/processor/base_test.go:390:15: Error return value of `proc.Process` is not checked (errcheck)
+		proc.Process(ctx, testData)
+		            ^
+internal/processor/base_test.go:411:16: Error return value of `proc1.Process` is not checked (errcheck)
+		proc1.Process(ctx, testData)
+		             ^
+internal/processor/parallel.go:242:15: Error return value of `p.pool.Close` is not checked (errcheck)
+		p.pool.Close()
+		            ^
+internal/processor/parallel_test.go:294:22: Error return value of `parallel.Close` is not checked (errcheck)
+	defer parallel.Close()
+	                    ^
+internal/processor/parallel_test.go:320:22: Error return value of `parallel.Close` is not checked (errcheck)
+	defer parallel.Close()
+	                    ^
+internal/processor/parallel_test.go:369:22: Error return value of `parallel.Close` is not checked (errcheck)
+	defer parallel.Close()
+	                    ^
+internal/processor/parallel_test.go:924:19: Error return value of `parallel.Process` is not checked (errcheck)
+		parallel.Process(ctx, data)
+		                ^
+internal/processor/parallel_test.go:946:19: Error return value of `parallel.Process` is not checked (errcheck)
+		parallel.Process(ctx, data)
+		                ^
+internal/processor/parallel_test.go:972:21: Error return value of `parallel.Process` is not checked (errcheck)
+				parallel.Process(ctx, data)
+				                ^
+internal/processor/worker-pool.go:345:10: Error return value of `p.Close` is not checked (errcheck)
+		p.Close()
+		       ^
+internal/processor/worker-pool_test.go:77:18: Error return value of `pool.Close` is not checked (errcheck)
+	defer pool.Close()
+	                ^
+internal/processor/worker-pool_test.go:99:18: Error return value of `pool.Close` is not checked (errcheck)
+	defer pool.Close()
+	                ^
+internal/processor/worker-pool_test.go:132:18: Error return value of `pool.Close` is not checked (errcheck)
+	defer pool.Close()
+	                ^
+internal/processor/worker-pool_test.go:683:21: Error return value of `pool.ProcessChunks` is not checked (errcheck)
+		pool.ProcessChunks(ctx, chunks, task)
+		                  ^
+internal/processor/worker-pool_test.go:710:21: Error return value of `pool.ProcessChunks` is not checked (errcheck)
+		pool.ProcessChunks(ctx, chunks, task)
+		                  ^
+internal/processor/worker-pool_test.go:733:21: Error return value of `pool.ProcessChunks` is not checked (errcheck)
+		pool.ProcessChunks(ctx, chunks, task)
+		                  ^
+internal/processor/wrappers_test.go:600:18: Error return value of `wrapper.Process` is not checked (errcheck)
+		wrapper.Process(ctx, testData)
+		               ^
+internal/processor/wrappers_test.go:617:18: Error return value of `wrapper.Process` is not checked (errcheck)
+		wrapper.Process(ctx, testData)
+		               ^
+internal/processor/wrappers_test.go:634:18: Error return value of `wrapper.Process` is not checked (errcheck)
+		wrapper.Process(ctx, testData)
+		               ^
+internal/processor/wrappers_test.go:655:17: Error return value of `filter.Process` is not checked (errcheck)
+		filter.Process(ctx, testData)
+		              ^
+internal/resilience/circuit_breaker_test.go:24:12: Error return value of `cb.Execute` is not checked (errcheck)
+	cb.Execute(opFail) // 1 failure
+	          ^
+internal/resilience/circuit_breaker_test.go:29:12: Error return value of `cb.Execute` is not checked (errcheck)
+	cb.Execute(opFail) // 2 failures -> Open
+	          ^
+internal/resilience/circuit_breaker_test.go:64:12: Error return value of `cb.Execute` is not checked (errcheck)
+	cb.Execute(opFail)
+	          ^
+pkg/api/lifecycle_test.go:171:10: Error return value of `mc.Close` is not checked (errcheck)
+	mc.Close()
+	        ^
+pkg/api/lifecycle_test.go:480:11: Error return value of `mc.Close` is not checked (errcheck)
+		mc.Close()
+		        ^
+internal/registry/processor_registry_test.go:242:2: ineffectual assignment to result (ineffassign)
+	result, err = proc.Process(ctx, invalidData)
+	^
+internal/config/loader_test.go:27:13: SA5011: possible nil pointer dereference (staticcheck)
+	if !loader.applyEnvOverrides {
+	           ^
+internal/config/loader_test.go:32:5: SA5011(related information): this check suggests that the pointer can be nil (staticcheck)
+	if loader == nil {
+	   ^
+internal/registry/formatter_registry_test.go:373:4: SA9003: empty branch (staticcheck)
+			if err != nil && err != ErrEmptyFormatterName {
+			^
+internal/registry/output_registry_test.go:377:4: SA9003: empty branch (staticcheck)
+			if err != nil && err != ErrEmptyOutputName {
+			^
+internal/registry/provider_registry_test.go:379:4: SA9003: empty branch (staticcheck)
+			if err != nil && err != ErrEmptyProviderName {
+			^
+internal/resilience/circuit_breaker.go:114:2: QF1003: could use tagged switch on cb.state (staticcheck)
+	if cb.state == StateHalfOpen {
+	^
+examples/integration_patterns/main.go:329:6: func productionUsageExample is unused (unused)
+func productionUsageExample() {
+     ^
+examples/integration_patterns/main.go:347:6: func developmentUsageExample is unused (unused)
+func developmentUsageExample() {
+     ^
+examples/integration_patterns/main.go:369:6: func testingUsageExample is unused (unused)
+func testingUsageExample() {
+     ^
+internal/engine/engine_test.go:479:7: type ctxProvider is unused (unused)
+	type ctxProvider struct{}
+	     ^
+61 issues:
+* errcheck: 50
+* ineffassign: 1
+* staticcheck: 6
+* unused: 4

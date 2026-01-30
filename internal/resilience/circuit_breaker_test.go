@@ -21,12 +21,12 @@ func TestCircuitBreaker_StateTransitions(t *testing.T) {
 	// 2. Fail up to threshold
 	opFail := func() error { return errors.New("boom") }
 
-	cb.Execute(opFail) // 1 failure
+	_ = cb.Execute(opFail) // 1 failure
 	if cb.State() != resilience.StateClosed {
 		t.Errorf("Expected Closed state after 1 failure, got %v", cb.State())
 	}
 
-	cb.Execute(opFail) // 2 failures -> Open
+	_ = cb.Execute(opFail) // 2 failures -> Open
 	if cb.State() != resilience.StateOpen {
 		t.Errorf("Expected Open state after 2 failures, got %v", cb.State())
 	}
@@ -61,7 +61,7 @@ func TestCircuitBreaker_HalfOpenFailure(t *testing.T) {
 	opFail := func() error { return errors.New("boom") }
 
 	// Open the circuit
-	cb.Execute(opFail)
+	_ = cb.Execute(opFail)
 	if cb.State() != resilience.StateOpen {
 		t.Fatalf("Failed to open circuit")
 	}

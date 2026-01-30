@@ -376,6 +376,7 @@ func TestOutputConcurrentRegisterAndGet(t *testing.T) {
 			// It's OK if not found yet, but shouldn't panic
 			if err != nil && err != ErrEmptyOutputName {
 				// Expected - output might not be registered yet
+				_ = err
 			}
 		}(i)
 	}
@@ -499,7 +500,7 @@ func BenchmarkGetOutput(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		GetOutput("bench")
+		_, _ = GetOutput("bench")
 	}
 }
 
@@ -511,7 +512,7 @@ func BenchmarkGetOutputParallel(b *testing.B) {
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			GetOutput("bench")
+			_, _ = GetOutput("bench")
 		}
 	})
 }

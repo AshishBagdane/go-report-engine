@@ -67,6 +67,11 @@ func main() {
 
 	// Example 8: Config or file pattern
 	example8()
+
+	fmt.Println("\n--- Usage Patterns ---")
+	productionUsageExample()
+	developmentUsageExample()
+	testingUsageExample()
 }
 
 // example1 demonstrates one-step load and build
@@ -94,11 +99,18 @@ func example2() {
 	fmt.Println("--- Example 2: LoadAndBuildWithEnv ---")
 
 	// Set environment variables
-	os.Setenv("ENGINE_PROVIDER_TYPE", "mock")
-	os.Setenv("ENGINE_FORMATTER_PARAM_INDENT", "4")
+	// Set environment variables
+	if err := os.Setenv("ENGINE_PROVIDER_TYPE", "mock"); err != nil {
+		log.Printf("Failed to set env: %v", err)
+		return
+	}
+	if err := os.Setenv("ENGINE_FORMATTER_PARAM_INDENT", "4"); err != nil {
+		log.Printf("Failed to set env: %v", err)
+		return
+	}
 	defer func() {
-		os.Unsetenv("ENGINE_PROVIDER_TYPE")
-		os.Unsetenv("ENGINE_FORMATTER_PARAM_INDENT")
+		_ = os.Unsetenv("ENGINE_PROVIDER_TYPE")
+		_ = os.Unsetenv("ENGINE_FORMATTER_PARAM_INDENT")
 	}()
 
 	// Load config with env overrides and build engine

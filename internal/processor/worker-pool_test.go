@@ -74,7 +74,7 @@ func TestNewWorkerPool(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_Empty(t *testing.T) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := []WorkChunk{}
@@ -96,7 +96,7 @@ func TestWorkerPoolProcessChunks_Empty(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_SingleChunk(t *testing.T) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := []WorkChunk{
@@ -129,7 +129,7 @@ func TestWorkerPoolProcessChunks_SingleChunk(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_MultipleChunks(t *testing.T) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := []WorkChunk{
@@ -178,7 +178,7 @@ func TestWorkerPoolProcessChunks_MultipleChunks(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_ContextCanceled(t *testing.T) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
@@ -200,7 +200,7 @@ func TestWorkerPoolProcessChunks_ContextCanceled(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_ContextTimeout(t *testing.T) {
 	pool := NewWorkerPool(2)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
@@ -229,7 +229,7 @@ func TestWorkerPoolProcessChunks_ContextTimeout(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_ContextCanceledDuringProcessing(t *testing.T) {
 	pool := NewWorkerPool(2)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -272,7 +272,7 @@ func TestWorkerPoolProcessChunks_ContextCanceledDuringProcessing(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_TaskError(t *testing.T) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := []WorkChunk{
@@ -304,7 +304,7 @@ func TestWorkerPoolProcessChunks_TaskError(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_MultipleErrors(t *testing.T) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := make([]WorkChunk, 10)
@@ -337,7 +337,7 @@ func TestWorkerPoolProcessChunks_MultipleErrors(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_OrderPreserved(t *testing.T) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 
@@ -378,7 +378,7 @@ func TestWorkerPoolProcessChunks_OrderPreserved(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_MoreWorkersThanChunks(t *testing.T) {
 	pool := NewWorkerPool(10)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := []WorkChunk{
@@ -414,7 +414,7 @@ func TestWorkerPoolProcessChunks_MoreWorkersThanChunks(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_FewerWorkersThanChunks(t *testing.T) {
 	pool := NewWorkerPool(2)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := make([]WorkChunk, 10)
@@ -565,7 +565,7 @@ func TestWorkerPoolCloseWithContext_Timeout(t *testing.T) {
 
 func TestWorkerPoolProcessChunks_Concurrent(t *testing.T) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	var wg sync.WaitGroup
 	errors := make(chan error, 10)
@@ -663,7 +663,7 @@ func TestSortWorkResults(t *testing.T) {
 
 func BenchmarkWorkerPoolProcessChunks_SmallChunks(b *testing.B) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := make([]WorkChunk, 10)
@@ -686,7 +686,7 @@ func BenchmarkWorkerPoolProcessChunks_SmallChunks(b *testing.B) {
 
 func BenchmarkWorkerPoolProcessChunks_LargeChunks(b *testing.B) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := make([]WorkChunk, 10)
@@ -713,7 +713,7 @@ func BenchmarkWorkerPoolProcessChunks_LargeChunks(b *testing.B) {
 
 func BenchmarkWorkerPoolProcessChunks_ManyChunks(b *testing.B) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := make([]WorkChunk, 100)
@@ -736,7 +736,7 @@ func BenchmarkWorkerPoolProcessChunks_ManyChunks(b *testing.B) {
 
 func BenchmarkWorkerPoolProcessChunks_CPUBound(b *testing.B) {
 	pool := NewWorkerPool(4)
-	defer pool.Close()
+	defer func() { _ = pool.Close() }()
 
 	ctx := context.Background()
 	chunks := make([]WorkChunk, 20)
@@ -780,7 +780,7 @@ func BenchmarkWorkerPoolProcessChunks_VariableWorkers(b *testing.B) {
 	for _, workers := range workerCounts {
 		b.Run(fmt.Sprintf("workers=%d", workers), func(b *testing.B) {
 			pool := NewWorkerPool(workers)
-			defer pool.Close()
+			defer func() { _ = pool.Close() }()
 
 			ctx := context.Background()
 			chunks := make([]WorkChunk, 50)
