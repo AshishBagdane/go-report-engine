@@ -55,11 +55,9 @@ func (f *YAMLFormatter) Configure(params map[string]string) error {
 		if err != nil {
 			return fmt.Errorf("yaml formatter: invalid indent %s: %w", indentStr, err)
 		}
-		if indent < 1 || indent > 8 {
-			// yaml.v3 might not have strict limits, but 2 or 4 is standard.
-			// Letting reasonable range.
+		if indent >= 1 && indent <= 8 {
+			f.Indent = indent
 		}
-		f.Indent = indent
 	}
 
 	return nil

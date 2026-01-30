@@ -116,7 +116,7 @@ Bob,25`
 	}
 
 	p := NewCSVProvider()
-	p.Configure(map[string]string{
+	_ = p.Configure(map[string]string{
 		"file_path":  tmpFile,
 		"has_header": "false",
 	})

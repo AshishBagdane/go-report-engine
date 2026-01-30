@@ -111,10 +111,11 @@ func (cb *CircuitBreaker) RecordSuccess() {
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
 
-	if cb.state == StateHalfOpen {
+	switch cb.state {
+	case StateHalfOpen:
 		cb.state = StateClosed
 		cb.failures = 0
-	} else if cb.state == StateClosed {
+	case StateClosed:
 		cb.failures = 0
 	}
 }

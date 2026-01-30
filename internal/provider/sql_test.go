@@ -14,7 +14,7 @@ func TestSQLProvider_Fetch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	query := "SELECT id, name FROM users"
 
@@ -105,7 +105,7 @@ func TestSQLProvider_QueryError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	mock.ExpectPing()
 	mock.ExpectQuery("SELECT").WillReturnError(errors.New("db error"))

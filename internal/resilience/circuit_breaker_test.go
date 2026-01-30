@@ -70,7 +70,7 @@ func TestCircuitBreaker_HalfOpenFailure(t *testing.T) {
 	time.Sleep(timeout + 10*time.Millisecond)
 
 	// Probe fails
-	cb.Execute(opFail)
+	_ = cb.Execute(opFail)
 
 	// Should revert to Open
 	if cb.State() != resilience.StateOpen {

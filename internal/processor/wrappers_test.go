@@ -597,7 +597,7 @@ func BenchmarkFilterWrapperProcess(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		wrapper.Process(ctx, testData)
+		_, _ = wrapper.Process(ctx, testData)
 	}
 }
 
@@ -614,7 +614,7 @@ func BenchmarkValidatorWrapperProcess(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		wrapper.Process(ctx, testData)
+		_, _ = wrapper.Process(ctx, testData)
 	}
 }
 
@@ -631,7 +631,7 @@ func BenchmarkTransformWrapperProcess(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		wrapper.Process(ctx, testData)
+		_, _ = wrapper.Process(ctx, testData)
 	}
 }
 
@@ -652,6 +652,6 @@ func BenchmarkWrapperChaining(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		filter.Process(ctx, testData)
+		_, _ = filter.Process(ctx, testData)
 	}
 }

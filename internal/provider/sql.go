@@ -57,7 +57,7 @@ func (p *SQLProvider) Fetch(ctx context.Context) ([]map[string]interface{}, erro
 	}
 
 	if shouldClose {
-		defer db.Close()
+		defer func() { _ = db.Close() }()
 	}
 
 	// Verify connection
@@ -70,7 +70,7 @@ func (p *SQLProvider) Fetch(ctx context.Context) ([]map[string]interface{}, erro
 	if err != nil {
 		return nil, fmt.Errorf("sql provider: query failed: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	// Get columns
 	columns, err := rows.Columns()

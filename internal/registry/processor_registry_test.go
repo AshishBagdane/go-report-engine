@@ -239,7 +239,7 @@ func TestRegisterValidator(t *testing.T) {
 		{"id": 1}, // Missing required_field
 	}
 
-	result, err = proc.Process(ctx, invalidData)
+	_, err = proc.Process(ctx, invalidData)
 	if err == nil {
 		t.Error("Validator should reject invalid data")
 	}

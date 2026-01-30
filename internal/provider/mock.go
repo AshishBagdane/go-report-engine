@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/AshishBagdane/go-report-engine/internal/logging"
@@ -21,6 +22,7 @@ type MockProvider struct {
 
 	// logger is the optional logger instance for this provider
 	logger *logging.Logger
+	mu     sync.Mutex
 }
 
 // NewMockProvider creates a new MockProvider with the given data.
@@ -63,6 +65,9 @@ func (m *MockProvider) WithLogger(logger *logging.Logger) *MockProvider {
 // getLogger returns the logger instance, creating a default one if necessary.
 // This ensures lazy initialization of the logger.
 func (m *MockProvider) getLogger() *logging.Logger {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if m.logger == nil {
 		m.logger = logging.NewLogger(logging.Config{
 			Level:     logging.LevelInfo,

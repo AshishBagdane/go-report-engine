@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync"
 )
 
 // Closeable extends io.Closer and represents a component that owns resources
@@ -177,6 +178,7 @@ type CloseableWithContext interface {
 //	    return c.closer.Close()
 //	}
 type MultiCloser struct {
+	mu      sync.Mutex
 	closers []io.Closer
 }
 
@@ -196,6 +198,8 @@ type MultiCloser struct {
 //	mc.Add(connection)
 //	defer mc.Close() // Closes connection, then file
 func (m *MultiCloser) Add(closer io.Closer) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if closer != nil {
 		m.closers = append(m.closers, closer)
 	}
@@ -218,6 +222,9 @@ func (m *MultiCloser) Add(closer io.Closer) {
 //	    log.Printf("Cleanup failed: %v", err)
 //	}
 func (m *MultiCloser) Close() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	var errs []error
 
 	// Close in reverse order (LIFO)

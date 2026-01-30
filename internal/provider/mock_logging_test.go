@@ -364,7 +364,7 @@ func BenchmarkMockProviderFetchWithLogging(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		provider.Fetch(ctx)
+		_, _ = provider.Fetch(ctx)
 	}
 }
 
@@ -380,7 +380,7 @@ func BenchmarkMockProviderFetchWithoutLogging(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		provider.Fetch(ctx)
+		_, _ = provider.Fetch(ctx)
 	}
 }
 
@@ -404,6 +404,6 @@ func BenchmarkMockProviderFetchDebugLogging(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		provider.Fetch(ctx)
+		_, _ = provider.Fetch(ctx)
 	}
 }

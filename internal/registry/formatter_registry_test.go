@@ -371,7 +371,7 @@ func TestFormatterConcurrentRegisterAndGet(t *testing.T) {
 			_, err := GetFormatter(name)
 			// It's OK if not found yet, but shouldn't panic
 			if err != nil && err != ErrEmptyFormatterName {
-				// Expected - formatter might not be registered yet
+				_ = err // Expected - formatter might not be registered yet
 			}
 		}(i)
 	}

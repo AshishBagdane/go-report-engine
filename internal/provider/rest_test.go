@@ -52,7 +52,7 @@ func TestRESTProvider_Fetch(t *testing.T) {
 			// Mock Server
 			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.statusCode)
-				json.NewEncoder(w).Encode(tt.responseBody)
+				_ = json.NewEncoder(w).Encode(tt.responseBody)
 			}))
 			defer ts.Close()
 
@@ -125,12 +125,12 @@ func TestRESTProvider_Headers(t *testing.T) {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`[]`))
+		_, _ = w.Write([]byte(`[]`))
 	}))
 	defer ts.Close()
 
 	p := NewRESTProvider()
-	p.Configure(map[string]string{
+	_ = p.Configure(map[string]string{
 		"url":             ts.URL,
 		"header_X-Custom": "MyValue",
 	})

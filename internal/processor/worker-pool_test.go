@@ -680,7 +680,7 @@ func BenchmarkWorkerPoolProcessChunks_SmallChunks(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		pool.ProcessChunks(ctx, chunks, task)
+		_, _ = pool.ProcessChunks(ctx, chunks, task)
 	}
 }
 
@@ -707,7 +707,7 @@ func BenchmarkWorkerPoolProcessChunks_LargeChunks(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		pool.ProcessChunks(ctx, chunks, task)
+		_, _ = pool.ProcessChunks(ctx, chunks, task)
 	}
 }
 
@@ -730,7 +730,7 @@ func BenchmarkWorkerPoolProcessChunks_ManyChunks(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		pool.ProcessChunks(ctx, chunks, task)
+		_, _ = pool.ProcessChunks(ctx, chunks, task)
 	}
 }
 
@@ -770,7 +770,7 @@ func BenchmarkWorkerPoolProcessChunks_CPUBound(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		pool.ProcessChunks(ctx, chunks, task)
+		_, _ = pool.ProcessChunks(ctx, chunks, task)
 	}
 }
 

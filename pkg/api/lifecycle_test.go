@@ -168,7 +168,7 @@ func TestMultiCloserCloseOrder(t *testing.T) {
 		mc.Add(closer)
 	}
 
-	mc.Close()
+	_ = mc.Close()
 
 	// Verify LIFO order (3, 2, 1)
 	expectedOrder := []int{3, 2, 1}
@@ -477,7 +477,7 @@ func BenchmarkMultiCloserClose(b *testing.B) {
 		}
 		b.StartTimer()
 
-		mc.Close()
+		_ = mc.Close()
 	}
 }
 
@@ -496,7 +496,7 @@ func BenchmarkMultiCloserCloseWithErrors(b *testing.B) {
 		}
 		b.StartTimer()
 
-		mc.Close()
+		_ = mc.Close()
 	}
 }
 

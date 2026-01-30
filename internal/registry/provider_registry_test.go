@@ -377,7 +377,7 @@ func TestProviderConcurrentRegisterAndGet(t *testing.T) {
 			_, err := GetProvider(name)
 			// It's OK if not found yet, but shouldn't panic
 			if err != nil && err != ErrEmptyProviderName {
-				// Expected - provider might not be registered yet
+				_ = err // Expected - provider might not be registered yet
 			}
 		}(i)
 	}

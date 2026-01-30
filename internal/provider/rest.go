@@ -67,7 +67,7 @@ func (p *RESTProvider) Fetch(ctx context.Context) ([]map[string]interface{}, err
 	if err != nil {
 		return nil, fmt.Errorf("rest provider: request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Validate status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
