@@ -23,14 +23,14 @@ func NewProviderError(operation string, errorType ErrorType, err error) *Provide
 // WithProviderType sets the provider type (e.g., "postgres", "csv", "api").
 func (e *ProviderError) WithProviderType(providerType string) *ProviderError {
 	e.ProviderType = providerType
-	e.WithContext("provider_type", providerType)
+	_ = e.WithContext("provider_type", providerType)
 	return e
 }
 
 // WithRecordCount sets the number of records processed before failure.
 func (e *ProviderError) WithRecordCount(count int) *ProviderError {
 	e.RecordCount = count
-	e.WithContext("record_count", count)
+	_ = e.WithContext("record_count", count)
 	return e
 }
 
@@ -40,22 +40,22 @@ func (e *ProviderError) WithQuery(query string) *ProviderError {
 	// Don't add full query to context as it might be large or contain sensitive data
 	// Instead, add a truncated version
 	if len(query) > 100 {
-		e.EngineError.WithContext("query_preview", query[:100]+"...")
+		_ = e.EngineError.WithContext("query_preview", query[:100]+"...")
 	} else {
-		e.EngineError.WithContext("query", query)
+		_ = e.EngineError.WithContext("query", query)
 	}
 	return e
 }
 
 // WithContext adds context information to the error and returns the ProviderError.
 func (e *ProviderError) WithContext(key string, value interface{}) *ProviderError {
-	e.EngineError.WithContext(key, value)
+	_ = e.EngineError.WithContext(key, value)
 	return e
 }
 
 // WithContextMap adds multiple context entries to the error and returns the ProviderError.
 func (e *ProviderError) WithContextMap(ctx map[string]interface{}) *ProviderError {
-	e.EngineError.WithContextMap(ctx)
+	_ = e.EngineError.WithContextMap(ctx)
 	return e
 }
 

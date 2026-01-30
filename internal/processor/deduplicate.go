@@ -83,12 +83,12 @@ func (p *DeduplicateProcessor) generateSignature(record map[string]interface{}) 
 	for _, k := range keys {
 		val, ok := record[k]
 		if !ok {
-			sb.WriteString(fmt.Sprintf("%s:<missing>|", k))
+			_, _ = sb.WriteString(fmt.Sprintf("%s:<missing>|", k))
 			continue
 		}
 		// specific formatting to avoid collision (e.g. "1" vs 1)
 		// technically strict type check is hard in pure string, but for dedupe usually string rep is fine
-		sb.WriteString(fmt.Sprintf("%s:%v|", k, val))
+		_, _ = sb.WriteString(fmt.Sprintf("%s:%v|", k, val))
 	}
 
 	// Hash the signature to keep memory usage somewhat constant regardless of strict data size,

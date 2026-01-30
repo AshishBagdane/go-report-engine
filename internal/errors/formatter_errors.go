@@ -24,33 +24,33 @@ func NewFormatterError(operation string, errorType ErrorType, err error) *Format
 // WithFormatterType sets the formatter type (e.g., "json", "csv", "xml").
 func (e *FormatterError) WithFormatterType(formatterType string) *FormatterError {
 	e.FormatterType = formatterType
-	e.EngineError.WithContext("formatter_type", formatterType)
+	_ = e.EngineError.WithContext("formatter_type", formatterType)
 	return e
 }
 
 // WithOutputFormat sets the desired output format.
 func (e *FormatterError) WithOutputFormat(format string) *FormatterError {
 	e.OutputFormat = format
-	e.EngineError.WithContext("output_format", format)
+	_ = e.EngineError.WithContext("output_format", format)
 	return e
 }
 
 // WithRecordCount sets the number of records being formatted.
 func (e *FormatterError) WithRecordCount(count int) *FormatterError {
 	e.RecordCount = count
-	e.EngineError.WithContext("record_count", count)
+	_ = e.EngineError.WithContext("record_count", count)
 	return e
 }
 
 // WithContext adds context information to the error and returns the FormatterError.
 func (e *FormatterError) WithContext(key string, value interface{}) *FormatterError {
-	e.EngineError.WithContext(key, value)
+	_ = e.EngineError.WithContext(key, value)
 	return e
 }
 
 // WithContextMap adds multiple context entries to the error and returns the FormatterError.
 func (e *FormatterError) WithContextMap(ctx map[string]interface{}) *FormatterError {
-	e.EngineError.WithContextMap(ctx)
+	_ = e.EngineError.WithContextMap(ctx)
 	return e
 }
 

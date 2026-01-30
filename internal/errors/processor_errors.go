@@ -25,40 +25,40 @@ func NewProcessorError(operation string, errorType ErrorType, err error) *Proces
 // WithProcessorType sets the processor type (e.g., "filter", "validator", "transformer").
 func (e *ProcessorError) WithProcessorType(processorType string) *ProcessorError {
 	e.ProcessorType = processorType
-	e.EngineError.WithContext("processor_type", processorType)
+	_ = e.EngineError.WithContext("processor_type", processorType)
 	return e
 }
 
 // WithProcessorName sets the processor name from configuration.
 func (e *ProcessorError) WithProcessorName(name string) *ProcessorError {
 	e.ProcessorName = name
-	e.EngineError.WithContext("processor_name", name)
+	_ = e.EngineError.WithContext("processor_name", name)
 	return e
 }
 
 // WithRecordIndex sets the index of the record that caused the error.
 func (e *ProcessorError) WithRecordIndex(index int) *ProcessorError {
 	e.RecordIndex = index
-	e.EngineError.WithContext("record_index", index)
+	_ = e.EngineError.WithContext("record_index", index)
 	return e
 }
 
 // WithFieldName sets the field name that caused the error.
 func (e *ProcessorError) WithFieldName(fieldName string) *ProcessorError {
 	e.FieldName = fieldName
-	e.EngineError.WithContext("field_name", fieldName)
+	_ = e.EngineError.WithContext("field_name", fieldName)
 	return e
 }
 
 // WithContext adds context information to the error and returns the ProcessorError.
 func (e *ProcessorError) WithContext(key string, value interface{}) *ProcessorError {
-	e.EngineError.WithContext(key, value)
+	_ = e.EngineError.WithContext(key, value)
 	return e
 }
 
 // WithContextMap adds multiple context entries to the error and returns the ProcessorError.
 func (e *ProcessorError) WithContextMap(ctx map[string]interface{}) *ProcessorError {
-	e.EngineError.WithContextMap(ctx)
+	_ = e.EngineError.WithContextMap(ctx)
 	return e
 }
 

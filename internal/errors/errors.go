@@ -98,30 +98,30 @@ func (e *EngineError) Error() string {
 	var sb strings.Builder
 
 	// Component and operation
-	sb.WriteString(fmt.Sprintf("[%s:%s] ", e.Component, e.Operation))
+	_, _ = sb.WriteString(fmt.Sprintf("[%s:%s] ", e.Component, e.Operation))
 
 	// Error message
 	if e.Err != nil {
-		sb.WriteString(e.Err.Error())
+		_, _ = sb.WriteString(e.Err.Error())
 	}
 
 	// Context information
 	if len(e.Context) > 0 {
-		sb.WriteString(" | context: {")
+		_, _ = sb.WriteString(" | context: {")
 		first := true
 		for k, v := range e.Context {
 			if !first {
-				sb.WriteString(", ")
+				_, _ = sb.WriteString(", ")
 			}
-			sb.WriteString(fmt.Sprintf("%s: %v", k, v))
+			_, _ = sb.WriteString(fmt.Sprintf("%s: %v", k, v))
 			first = false
 		}
-		sb.WriteString("}")
+		_, _ = sb.WriteString("}")
 	}
 
 	// Type information
 	if e.Type != ErrorTypeUnknown {
-		sb.WriteString(fmt.Sprintf(" [type: %s]", e.Type))
+		_, _ = sb.WriteString(fmt.Sprintf(" [type: %s]", e.Type))
 	}
 
 	return sb.String()

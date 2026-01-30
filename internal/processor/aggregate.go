@@ -127,7 +127,7 @@ func (p *AggregateProcessor) Process(ctx context.Context, data []map[string]inte
 func (p *AggregateProcessor) generateGroupKey(record map[string]interface{}) string {
 	var sb strings.Builder
 	for _, k := range p.GroupBy {
-		sb.WriteString(fmt.Sprintf("%v|", record[k]))
+		_, _ = sb.WriteString(fmt.Sprintf("%v|", record[k]))
 	}
 	return sb.String()
 }
