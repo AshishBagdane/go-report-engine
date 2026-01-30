@@ -3,10 +3,10 @@ package factory
 import (
 	"fmt"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"    // For ProcessorConfig
-	"github.com/AshishBagdane/report-engine/internal/processor" // For ProcessorHandler
-	"github.com/AshishBagdane/report-engine/internal/registry"
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"    // For ProcessorConfig
+	"github.com/AshishBagdane/go-report-engine/internal/processor" // For ProcessorHandler
+	"github.com/AshishBagdane/go-report-engine/internal/registry"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // BuildProcessorChain reads a list of configurations and links them together

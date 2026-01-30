@@ -3,7 +3,7 @@ package processor
 import (
 	"context"
 
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // --- Filter Wrapper ---

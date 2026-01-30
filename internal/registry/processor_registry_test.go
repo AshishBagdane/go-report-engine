@@ -6,8 +6,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/processor"
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // mockProcessor is a simple test implementation of ProcessorHandler

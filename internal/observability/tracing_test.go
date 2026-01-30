@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
-	"github.com/AshishBagdane/report-engine/internal/formatter"
-	"github.com/AshishBagdane/report-engine/internal/observability"
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/internal/processor"
-	"github.com/AshishBagdane/report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
+	"github.com/AshishBagdane/go-report-engine/internal/formatter"
+	"github.com/AshishBagdane/go-report-engine/internal/observability"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
 )
 
 // MockTracer for testing

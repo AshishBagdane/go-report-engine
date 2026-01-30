@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/errors"
-	"github.com/AshishBagdane/report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/errors"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
 )
 
 // Mock implementations for testing

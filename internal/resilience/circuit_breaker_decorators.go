@@ -3,9 +3,9 @@ package resilience
 import (
 	"context"
 
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/internal/provider"
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // ProviderWithCircuitBreaker wraps a ProviderStrategy with a CircuitBreaker.

@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/errors"
+	"github.com/AshishBagdane/go-report-engine/internal/errors"
 )
 
 // RetryPolicy defines the configuration for retrying operations.

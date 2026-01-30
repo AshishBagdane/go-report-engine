@@ -3,7 +3,7 @@ package engine
 import (
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/logging"
+	"github.com/AshishBagdane/go-report-engine/internal/logging"
 )
 
 // TestDefaultLoggingConfig tests default logging configuration

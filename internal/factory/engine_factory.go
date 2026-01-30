@@ -3,8 +3,8 @@ package factory
 import (
 	"fmt"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
-	"github.com/AshishBagdane/report-engine/internal/registry"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
+	"github.com/AshishBagdane/go-report-engine/internal/registry"
 )
 
 // NewEngineFromConfig acts as the central Factory defined in your diagram.

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
 )
 
 // Mock implementations with cleanup support

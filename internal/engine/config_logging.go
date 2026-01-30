@@ -1,6 +1,6 @@
 package engine
 
-import "github.com/AshishBagdane/report-engine/internal/logging"
+import "github.com/AshishBagdane/go-report-engine/internal/logging"
 
 // LoggingConfig represents logging configuration for the engine.
 type LoggingConfig struct {

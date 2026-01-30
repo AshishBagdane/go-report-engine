@@ -5,8 +5,8 @@ package config
 import (
 	"fmt"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
-	"github.com/AshishBagdane/report-engine/internal/factory"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
+	"github.com/AshishBagdane/go-report-engine/internal/factory"
 )
 
 // LoadAndBuild loads a configuration file and builds an engine in one step.

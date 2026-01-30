@@ -1,4 +1,4 @@
-module github.com/AshishBagdane/report-engine
+module github.com/AshishBagdane/go-report-engine
 
 go 1.24.3
 

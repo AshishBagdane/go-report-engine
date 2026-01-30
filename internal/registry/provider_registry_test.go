@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
 )
 
 // mockProvider is a simple test implementation of ProviderStrategy

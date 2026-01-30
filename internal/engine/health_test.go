@@ -5,12 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
-	"github.com/AshishBagdane/report-engine/internal/formatter"
-	"github.com/AshishBagdane/report-engine/internal/health"
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/internal/processor"
-	"github.com/AshishBagdane/report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
+	"github.com/AshishBagdane/go-report-engine/internal/formatter"
+	"github.com/AshishBagdane/go-report-engine/internal/health"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
 )
 
 // MockHealthyProvider implements health.Checker

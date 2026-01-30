@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // OutputWithMetrics wraps an OutputStrategy with metrics collection.

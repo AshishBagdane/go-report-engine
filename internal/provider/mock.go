@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/logging"
+	"github.com/AshishBagdane/go-report-engine/internal/logging"
 )
 
 // MockProvider is a simple in-memory provider for testing and examples.

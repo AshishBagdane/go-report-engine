@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/resilience"
+	"github.com/AshishBagdane/go-report-engine/internal/resilience"
 )
 
 func TestCircuitBreaker_StateTransitions(t *testing.T) {

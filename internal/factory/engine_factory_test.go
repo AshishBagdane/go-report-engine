@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
-	"github.com/AshishBagdane/report-engine/internal/formatter"
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/internal/provider"
-	"github.com/AshishBagdane/report-engine/internal/registry"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
+	"github.com/AshishBagdane/go-report-engine/internal/formatter"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/registry"
 )
 
 // setupRegistries initializes all required registries for testing

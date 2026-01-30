@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/formatter"
+	"github.com/AshishBagdane/go-report-engine/internal/formatter"
 )
 
 // mockFormatter is a simple test implementation of FormatStrategy

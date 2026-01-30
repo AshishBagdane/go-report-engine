@@ -8,14 +8,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
-	errs "github.com/AshishBagdane/report-engine/internal/errors"
-	"github.com/AshishBagdane/report-engine/internal/formatter"
-	"github.com/AshishBagdane/report-engine/internal/logging"
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/internal/processor"
-	"github.com/AshishBagdane/report-engine/internal/provider"
-	"github.com/AshishBagdane/report-engine/internal/resilience"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
+	errs "github.com/AshishBagdane/go-report-engine/internal/errors"
+	"github.com/AshishBagdane/go-report-engine/internal/formatter"
+	"github.com/AshishBagdane/go-report-engine/internal/logging"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/resilience"
 )
 
 // FailingProvider simulates a provider that fails a few times before succeeding

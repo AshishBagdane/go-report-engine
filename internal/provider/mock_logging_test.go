@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/logging"
+	"github.com/AshishBagdane/go-report-engine/internal/logging"
 )
 
 // TestMockProviderWithLogger tests logger injection

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/AshishBagdane/report-engine/internal/formatter"
+	"github.com/AshishBagdane/go-report-engine/internal/formatter"
 )
 
 // FormatterFactory is a function type that creates new instances of FormatStrategy.

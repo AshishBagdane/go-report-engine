@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // Mock implementations for testing

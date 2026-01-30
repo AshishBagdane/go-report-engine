@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
 )
 
 // TestDefaultConfig tests default configuration

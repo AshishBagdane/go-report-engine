@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/internal/processor"
-	"github.com/AshishBagdane/report-engine/internal/provider"
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // ProviderWithTracing wraps a ProviderStrategy with tracing.

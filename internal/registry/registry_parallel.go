@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/AshishBagdane/report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
 )
 
 // RegisterParallelProcessor registers a processor wrapped in parallel execution mode.

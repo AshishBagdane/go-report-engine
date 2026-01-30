@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/AshishBagdane/report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
 )
 
 // OutputFactory is a function type that creates new instances of OutputStrategy.

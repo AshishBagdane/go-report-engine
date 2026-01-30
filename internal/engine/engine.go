@@ -9,14 +9,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/errors"
-	"github.com/AshishBagdane/report-engine/internal/formatter"
-	"github.com/AshishBagdane/report-engine/internal/health"
-	"github.com/AshishBagdane/report-engine/internal/logging"
-	"github.com/AshishBagdane/report-engine/internal/memory"
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/internal/processor"
-	"github.com/AshishBagdane/report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/errors"
+	"github.com/AshishBagdane/go-report-engine/internal/formatter"
+	"github.com/AshishBagdane/go-report-engine/internal/health"
+	"github.com/AshishBagdane/go-report-engine/internal/logging"
+	"github.com/AshishBagdane/go-report-engine/internal/memory"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
 )
 
 // ReportEngine orchestrates the report generation pipeline with structured logging.

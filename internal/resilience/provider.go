@@ -3,8 +3,8 @@ package resilience
 import (
 	"context"
 
-	"github.com/AshishBagdane/report-engine/internal/provider"
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // ProviderWithRetry wraps a ProviderStrategy with retry logic.

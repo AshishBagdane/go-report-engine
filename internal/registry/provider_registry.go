@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/AshishBagdane/report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
 )
 
 // ProviderFactory is a function type that creates new instances of ProviderStrategy.

@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/processor"
-	"github.com/AshishBagdane/report-engine/internal/registry"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/registry"
 )
 
 func main() {

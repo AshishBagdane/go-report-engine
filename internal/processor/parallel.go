@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // ParallelProcessor wraps any ProcessorHandler to enable concurrent processing.

@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/processor"
+	"github.com/AshishBagdane/go-report-engine/internal/processor"
 )
 
 // --- RegisterParallelProcessor Tests ---

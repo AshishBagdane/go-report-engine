@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
 )
 
 // ProviderWithMetrics wraps a ProviderStrategy with metrics collection.

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/internal/errors"
-	"github.com/AshishBagdane/report-engine/internal/resilience"
+	"github.com/AshishBagdane/go-report-engine/internal/errors"
+	"github.com/AshishBagdane/go-report-engine/internal/resilience"
 )
 
 // MockProviderStrategy for testing retries

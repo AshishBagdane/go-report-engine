@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/AshishBagdane/report-engine/internal/memory"
+	"github.com/AshishBagdane/go-report-engine/internal/memory"
 )
 
 // CSVProvider implements ProviderStrategy for reading CSV files.

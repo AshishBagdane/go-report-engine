@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // Close implements io.Closer for resource cleanup.

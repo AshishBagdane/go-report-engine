@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
 )
 
 // mockOutput is a simple test implementation of OutputStrategy

@@ -31,7 +31,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
 	"gopkg.in/yaml.v3"
 )
 

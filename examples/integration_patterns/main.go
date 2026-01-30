@@ -6,11 +6,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/AshishBagdane/report-engine/internal/config"
-	"github.com/AshishBagdane/report-engine/internal/formatter"
-	"github.com/AshishBagdane/report-engine/internal/output"
-	"github.com/AshishBagdane/report-engine/internal/provider"
-	"github.com/AshishBagdane/report-engine/internal/registry"
+	"github.com/AshishBagdane/go-report-engine/internal/config"
+	"github.com/AshishBagdane/go-report-engine/internal/formatter"
+	"github.com/AshishBagdane/go-report-engine/internal/output"
+	"github.com/AshishBagdane/go-report-engine/internal/provider"
+	"github.com/AshishBagdane/go-report-engine/internal/registry"
 )
 
 func init() {

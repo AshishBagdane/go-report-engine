@@ -2,7 +2,7 @@
 // These defaults make it easy to get started with sensible production-ready values.
 package config
 
-import "github.com/AshishBagdane/report-engine/internal/engine"
+import "github.com/AshishBagdane/go-report-engine/internal/engine"
 
 // DefaultConfig returns a minimal valid configuration with sensible defaults.
 // This is the simplest configuration that will work out of the box.

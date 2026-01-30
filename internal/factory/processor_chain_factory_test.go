@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AshishBagdane/report-engine/internal/engine"
-	"github.com/AshishBagdane/report-engine/internal/registry"
-	"github.com/AshishBagdane/report-engine/pkg/api"
+	"github.com/AshishBagdane/go-report-engine/internal/engine"
+	"github.com/AshishBagdane/go-report-engine/internal/registry"
+	"github.com/AshishBagdane/go-report-engine/pkg/api"
 )
 
 // Mock processor strategies for testing
